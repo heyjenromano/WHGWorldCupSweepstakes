@@ -184,7 +184,9 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
   background:var(--panel);border:1px solid var(--border);
   border-radius:8px;padding:14px 16px;margin-bottom:8px;
   display:flex;align-items:flex-start;gap:12px;
+  transition:border-color .15s;
 }
+.pcard:hover{border-color:var(--green);}
 .pcard-av{
   width:40px;height:40px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
@@ -543,7 +545,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
           <span class="hero-pill">10 Players</span>
           <span class="hero-pill">48 Teams</span>
           <span class="hero-pill green">£120 Prize Pot</span>
-          <span class="hero-pill">17 Matches Played</span>
+          <span class="hero-pill">20 Matches Played</span>
         </div>
       </div>
 
@@ -717,31 +719,47 @@ function computeGroupPos(){
 }
 
 let DISC=[
-  // Source: ESPN FIFA World Cup Discipline Stats page (screenshot, Jun 16 2026)
-  {team:"South Africa",      y:2, r:2},
-  {team:"Paraguay",          y:5, r:0},
-  {team:"Mexico",            y:1, r:1},
-  {team:"Côte d'Ivoire",     y:3, r:0},
-  {team:"Scotland",          y:3, r:0},
-  {team:"Bosnia & Herzegovina", y:3, r:0},
-  {team:"Netherlands",       y:3, r:0},
-  {team:"Qatar",             y:2, r:0},
-  {team:"Canada",            y:2, r:0},
-  {team:"Brazil",            y:2, r:0},
-  {team:"Haiti",             y:1, r:0},
-  {team:"United States",     y:1, r:0},
-  {team:"Tunisia",           y:1, r:0},
-  {team:"Switzerland",       y:1, r:0},
-  {team:"Türkiye",           y:1, r:0},
-  {team:"Korea Republic",    y:1, r:0},
-  {team:"Ecuador",           y:1, r:0},
-  {team:"Curaçao",           y:0, r:0},
-  {team:"Morocco",           y:0, r:0},
-  {team:"Australia",         y:0, r:0},
-  {team:"Japan",             y:0, r:0},
-  {team:"Germany",           y:0, r:0},
-  {team:"Sweden",            y:0, r:0},
-  {team:"Czechia",           y:0, r:0},
+  // Source: ESPN FIFA World Cup Discipline Stats (screenshots, Jun 17 2026)
+  {team:"South Africa",          y:2, r:2},
+  {team:"Paraguay",              y:5, r:0},
+  {team:"Mexico",                y:1, r:1},
+  {team:"Côte d'Ivoire",         y:3, r:0},
+  {team:"Scotland",              y:3, r:0},
+  {team:"Bosnia & Herzegovina",  y:3, r:0},
+  {team:"Netherlands",           y:3, r:0},
+  {team:"Qatar",                 y:2, r:0},
+  {team:"Egypt",                 y:2, r:0},
+  {team:"Belgium",               y:2, r:0},
+  {team:"Canada",                y:2, r:0},
+  {team:"Brazil",                y:2, r:0},
+  {team:"Iraq",                  y:1, r:0},
+  {team:"Haiti",                 y:1, r:0},
+  {team:"Cabo Verde",            y:1, r:0},
+  {team:"United States",         y:1, r:0},
+  {team:"Tunisia",               y:1, r:0},
+  {team:"Saudi Arabia",          y:1, r:0},
+  {team:"Switzerland",           y:1, r:0},
+  {team:"Austria",               y:1, r:0},
+  {team:"Iran",                  y:1, r:0},
+  {team:"Türkiye",               y:1, r:0},
+  {team:"Korea Republic",        y:1, r:0},
+  {team:"Ecuador",               y:1, r:0},
+  {team:"Spain",                 y:1, r:0},
+  {team:"Uruguay",               y:1, r:0},
+  {team:"Argentina",             y:1, r:0},
+  {team:"Curaçao",               y:0, r:0},
+  {team:"Jordan",                y:0, r:0},
+  {team:"Morocco",               y:0, r:0},
+  {team:"New Zealand",           y:0, r:0},
+  {team:"Senegal",               y:0, r:0},
+  {team:"Australia",             y:0, r:0},
+  {team:"Japan",                 y:0, r:0},
+  {team:"Algeria",               y:0, r:0},
+  {team:"Germany",               y:0, r:0},
+  {team:"France",                y:0, r:0},
+  {team:"Sweden",                y:0, r:0},
+  {team:"Norway",                y:0, r:0},
+  {team:"Czechia",               y:0, r:0},
 ];
 const cs=d=>d.y+d.r*2;
 
@@ -762,10 +780,10 @@ const MATCHES=[
   {ds:"Mon 15 Jun",H:19,M:0, g:"G",h:"Belgium",        a:"Egypt",                 score:"1–1",done:true},
   {ds:"Mon 15 Jun",H:22,M:0, g:"H",h:"Saudi Arabia",   a:"Uruguay",               score:"1–1",done:true},
   {ds:"Tue 16 Jun",H:1, M:0, g:"G",h:"Iran",           a:"New Zealand",           score:"2–2",done:true},
-  {ds:"Tue 16 Jun",H:1, M:0, g:"J",h:"Argentina",      a:"Algeria",               score:null, done:false},
-  {ds:"Tue 16 Jun",H:4, M:0, g:"J",h:"Austria",        a:"Jordan",                score:null, done:false},
+  {ds:"Tue 16 Jun",H:1, M:0, g:"J",h:"Argentina",      a:"Algeria",               score:"3–0",done:true},
+  {ds:"Tue 16 Jun",H:4, M:0, g:"J",h:"Austria",        a:"Jordan",                score:"3–1",done:true},
   {ds:"Tue 16 Jun",H:19,M:0, g:"I",h:"France",         a:"Senegal",               score:"3–1",done:true},
-  {ds:"Tue 16 Jun",H:22,M:0, g:"I",h:"Iraq",           a:"Norway",                score:null, done:false},
+  {ds:"Tue 16 Jun",H:22,M:0, g:"I",h:"Iraq",           a:"Norway",                score:"1–4",done:true},
   {ds:"Wed 17 Jun",H:17,M:0, g:"K",h:"Portugal",       a:"DR Congo",              score:null, done:false},
   {ds:"Wed 17 Jun",H:20,M:0, g:"L",h:"England",        a:"Croatia",               score:null, done:false},
   {ds:"Wed 17 Jun",H:23,M:0, g:"L",h:"Ghana",          a:"Panama",                score:null, done:false},
@@ -914,7 +932,8 @@ function buildHome(){
   if(!ae.length)h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No teams have progressed yet — check back after matchday 1 is complete.</p>`;
   else ae.forEach(([o,ts])=>{
     const p=PARTS.find(x=>x.name===o);
-    h+=`<div class="pcard"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
+    const pi=PARTS.findIndex(x=>x.name===o);
+    h+=`<div class="pcard" onclick="showPlayer(${pi})" style="cursor:pointer"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
     <div><div class="pcard-name">${o}</div><div class="tag-row">${ts.map(t=>ttag(t,false)).join('')}</div></div></div>`;
   });
 
@@ -924,7 +943,8 @@ function buildHome(){
   if(!ee.length)h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No teams in third place yet.</p>`;
   else ee.forEach(([o,ts])=>{
     const p=PARTS.find(x=>x.name===o);
-    h+=`<div class="pcard"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
+    const pi=PARTS.findIndex(x=>x.name===o);
+    h+=`<div class="pcard" onclick="showPlayer(${pi})" style="cursor:pointer"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
     <div><div class="pcard-name">${o}</div><div class="tag-row">${ts.map(t=>ttag(t,false)).join('')}</div></div></div>`;
   });
 
@@ -1031,7 +1051,7 @@ function buildDisc(){
     return{name:p.name,pi,y,r,s:y+r*2,totalR:r,cards};
   }).sort((a,b)=>b.s-a.s||b.totalR-a.totalR);
 
-  let h=`<div class="data-notice">📋 Card data sourced from ESPN FIFA World Cup Discipline Stats (as of 16 Jun 2026). Group standings are live-calculated from match results.</div>`;
+  let h=`<div class="data-notice">📋 Card data sourced from ESPN FIFA World Cup Discipline Stats (screenshots, 17 Jun 2026). Ghana, DR Congo, Panama, Uzbekistan, Portugal, Croatia, England and Colombia yet to play.</div>`;
   h+=`<div class="sec"><span class="sec-lbl">Leaderboard</span><span style="font-size:11px;color:var(--text3);margin-left:8px">· ties broken by most red cards</span></div>`;
 
   rows.forEach((row,i)=>{
@@ -1091,7 +1111,7 @@ function buildTeams(){
     const best=p.teams.slice().sort((a,b)=>(FIFA_RANK[a]||99)-(FIFA_RANK[b]||99))[0];
     const bestRank=FIFA_RANK[best]||'?';
 
-    h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    h+=`<div id="player-card-${pi}" style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden">
       <!-- Card header -->
       <div style="background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden">
         <div style="position:absolute;right:-8px;top:-16px;font-family:'Bebas Neue',sans-serif;font-size:90px;color:rgba(255,255,255,0.05);pointer-events:none;user-select:none">${p.name.toUpperCase()}</div>
@@ -1200,6 +1220,16 @@ function showPage(id){
   else{buildHome();}
   buildSB();
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showPlayer(pi){
+  showPage('teams');
+  setTimeout(()=>{
+    const el=document.getElementById('player-card-'+pi);
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+    // Briefly highlight the card
+    if(el){el.style.outline='2px solid var(--green)';setTimeout(()=>el.style.outline='',1200);}
+  },100);
 }
 
 // ══════════════════════════════════════════════════════
