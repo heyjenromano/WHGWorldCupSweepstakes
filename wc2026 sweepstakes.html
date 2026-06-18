@@ -545,7 +545,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
           <span class="hero-pill">10 Players</span>
           <span class="hero-pill">48 Teams</span>
           <span class="hero-pill green">£120 Prize Pot</span>
-          <span class="hero-pill">24 Matches Played</span>
+          <span class="hero-pill" id="matches-pill">– Matches Played</span>
         </div>
       </div>
 
@@ -963,7 +963,7 @@ function buildHome(){
     h+=`<div class="hbox">
       <div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${dhO.slice(0,2).toUpperCase()}</div>
       <div><div class="hbox-title">${dhO} &nbsp;<span class="tag tag-dark">${dhT}</span></div>
-      <div class="hbox-sub">FIFA rank #${dhR} · currently 1st or 2nd in their group · 16 matches played so far</div></div>
+      <div class="hbox-sub">FIFA rank #${dhR} · currently 1st or 2nd in their group · ${MATCHES.filter(m=>m.done).length} matches played so far</div></div>
     </div>`;
   } else {
     h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No progressing teams yet.</p>`;
@@ -1245,6 +1245,7 @@ function showPlayer(pi){
 // ══════════════════════════════════════════════════════
 buildSB();
 buildHome();
+document.getElementById('matches-pill').textContent = MATCHES.filter(m=>m.done).length + ' Matches Played';
 </script>
 </body>
 </html>
