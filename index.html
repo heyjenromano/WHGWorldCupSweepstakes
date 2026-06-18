@@ -545,7 +545,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
           <span class="hero-pill">10 Players</span>
           <span class="hero-pill">48 Teams</span>
           <span class="hero-pill green">£120 Prize Pot</span>
-          <span class="hero-pill">20 Matches Played</span>
+          <span class="hero-pill">24 Matches Played</span>
         </div>
       </div>
 
@@ -719,22 +719,27 @@ function computeGroupPos(){
 }
 
 let DISC=[
-  // Source: ESPN FIFA World Cup Discipline Stats (screenshots, Jun 17 2026)
+  // Source: ESPN FIFA World Cup Discipline Stats (screenshot, 18 Jun 2026)
   {team:"South Africa",          y:2, r:2},
   {team:"Paraguay",              y:5, r:0},
   {team:"Mexico",                y:1, r:1},
   {team:"Côte d'Ivoire",         y:3, r:0},
   {team:"Scotland",              y:3, r:0},
+  {team:"Portugal",              y:3, r:0},
   {team:"Bosnia & Herzegovina",  y:3, r:0},
   {team:"Netherlands",           y:3, r:0},
   {team:"Qatar",                 y:2, r:0},
+  {team:"Panama",                y:2, r:0},
   {team:"Egypt",                 y:2, r:0},
   {team:"Belgium",               y:2, r:0},
   {team:"Canada",                y:2, r:0},
   {team:"Brazil",                y:2, r:0},
+  {team:"Ghana",                 y:1, r:0},
   {team:"Iraq",                  y:1, r:0},
+  {team:"DR Congo",              y:1, r:0},
   {team:"Haiti",                 y:1, r:0},
   {team:"Cabo Verde",            y:1, r:0},
+  {team:"Uzbekistan",            y:1, r:0},
   {team:"United States",         y:1, r:0},
   {team:"Tunisia",               y:1, r:0},
   {team:"Saudi Arabia",          y:1, r:0},
@@ -744,9 +749,8 @@ let DISC=[
   {team:"Türkiye",               y:1, r:0},
   {team:"Korea Republic",        y:1, r:0},
   {team:"Ecuador",               y:1, r:0},
+  {team:"Colombia",              y:1, r:0},
   {team:"Spain",                 y:1, r:0},
-  {team:"Uruguay",               y:1, r:0},
-  {team:"Argentina",             y:1, r:0},
   {team:"Curaçao",               y:0, r:0},
   {team:"Jordan",                y:0, r:0},
   {team:"Morocco",               y:0, r:0},
@@ -757,9 +761,13 @@ let DISC=[
   {team:"Algeria",               y:0, r:0},
   {team:"Germany",               y:0, r:0},
   {team:"France",                y:0, r:0},
+  {team:"Croatia",               y:0, r:0},
   {team:"Sweden",                y:0, r:0},
   {team:"Norway",                y:0, r:0},
   {team:"Czechia",               y:0, r:0},
+  {team:"England",               y:0, r:0},
+  {team:"Uruguay",               y:0, r:0},
+  {team:"Argentina",             y:0, r:0},
 ];
 const cs=d=>d.y+d.r*2;
 
@@ -784,10 +792,10 @@ const MATCHES=[
   {ds:"Tue 16 Jun",H:4, M:0, g:"J",h:"Austria",        a:"Jordan",                score:"3–1",done:true},
   {ds:"Tue 16 Jun",H:19,M:0, g:"I",h:"France",         a:"Senegal",               score:"3–1",done:true},
   {ds:"Tue 16 Jun",H:22,M:0, g:"I",h:"Iraq",           a:"Norway",                score:"1–4",done:true},
-  {ds:"Wed 17 Jun",H:17,M:0, g:"K",h:"Portugal",       a:"DR Congo",              score:null, done:false},
-  {ds:"Wed 17 Jun",H:20,M:0, g:"L",h:"England",        a:"Croatia",               score:null, done:false},
-  {ds:"Wed 17 Jun",H:23,M:0, g:"L",h:"Ghana",          a:"Panama",                score:null, done:false},
-  {ds:"Thu 18 Jun",H:2, M:0, g:"K",h:"Uzbekistan",     a:"Colombia",              score:null, done:false},
+  {ds:"Wed 17 Jun",H:17,M:0, g:"K",h:"Portugal",       a:"DR Congo",              score:"1–1",done:true},
+  {ds:"Wed 17 Jun",H:20,M:0, g:"L",h:"England",        a:"Croatia",               score:"4–2",done:true},
+  {ds:"Wed 17 Jun",H:23,M:0, g:"L",h:"Ghana",          a:"Panama",                score:"1–0",done:true},
+  {ds:"Thu 18 Jun",H:2, M:0, g:"K",h:"Uzbekistan",     a:"Colombia",              score:"1–3",done:true},
   {ds:"Thu 18 Jun",H:16,M:0, g:"A",h:"Czechia",        a:"South Africa",          score:null, done:false},
   {ds:"Thu 18 Jun",H:19,M:0, g:"B",h:"Switzerland",    a:"Bosnia & Herzegovina",  score:null, done:false},
   {ds:"Thu 18 Jun",H:22,M:0, g:"B",h:"Canada",         a:"Qatar",                 score:null, done:false},
@@ -1051,12 +1059,12 @@ function buildDisc(){
     return{name:p.name,pi,y,r,s:y+r*2,totalR:r,cards};
   }).sort((a,b)=>b.s-a.s||b.totalR-a.totalR);
 
-  let h=`<div class="data-notice">📋 Card data sourced from ESPN FIFA World Cup Discipline Stats (screenshots, 17 Jun 2026). Ghana, DR Congo, Panama, Uzbekistan, Portugal, Croatia, England and Colombia yet to play.</div>`;
+  let h=`<div class="data-notice">📋 Card data sourced from ESPN FIFA World Cup Discipline Stats (screenshot, 18 Jun 2026).</div>`;
   h+=`<div class="sec"><span class="sec-lbl">Leaderboard</span><span style="font-size:11px;color:var(--text3);margin-left:8px">· ties broken by most red cards</span></div>`;
 
   rows.forEach((row,i)=>{
     const p=PARTS[row.pi];const isL=i===0&&row.s>0;
-    const det=row.cards.map(d=>`${d.team}: <span class="ycard"></span>${d.y} <span class="rcard"></span>${d.r}`).join(' &nbsp;·&nbsp; ');
+    const det=row.cards.filter(d=>d.y>0||d.r>0).map(d=>`${d.team}: <span class="ycard"></span>${d.y} <span class="rcard"></span>${d.r}`).join(' &nbsp;·&nbsp; ');
     h+=`<div class="discrow${isL?' lead':''}">
       <div class="disc-pos">${i+1}</div>
       <div style="width:36px;height:36px;border-radius:50%;background:${p.av.bg};color:${p.av.c};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:13px;flex-shrink:0">${row.name.slice(0,2).toUpperCase()}</div>
