@@ -238,6 +238,8 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-done{background:var(--green)}
 .dot-up{background:var(--border2)}
+.dot-live{background:var(--green);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
 /* ─── DARK HORSE TABLE ───────────────────────────────────── */
 .drow{
@@ -718,58 +720,138 @@ function computeGroupPos(){
   return result;
 }
 
+// ESPN team displayName → sweepstakes team name
+const ESPN_NAME_MAP={
+  "South Africa":"South Africa","Mexico":"Mexico","South Korea":"Korea Republic",
+  "Czechia":"Czechia","Bosnia-Herzegovina":"Bosnia & Herzegovina","Canada":"Canada",
+  "United States":"United States","Paraguay":"Paraguay","Qatar":"Qatar",
+  "Switzerland":"Switzerland","Brazil":"Brazil","Morocco":"Morocco",
+  "Haiti":"Haiti","Scotland":"Scotland","Türkiye":"Türkiye","Australia":"Australia",
+  "Germany":"Germany","Curaçao":"Curaçao","Côte d'Ivoire":"Côte d'Ivoire",
+  "Ecuador":"Ecuador","Netherlands":"Netherlands","Japan":"Japan",
+  "Sweden":"Sweden","Tunisia":"Tunisia","Belgium":"Belgium","Egypt":"Egypt",
+  "New Zealand":"New Zealand","Iran":"Iran","Spain":"Spain","Cape Verde":"Cabo Verde",
+  "Saudi Arabia":"Saudi Arabia","Uruguay":"Uruguay","France":"France","Senegal":"Senegal",
+  "Iraq":"Iraq","Norway":"Norway","Argentina":"Argentina","Algeria":"Algeria",
+  "Austria":"Austria","Jordan":"Jordan","Portugal":"Portugal","Congo DR":"DR Congo",
+  "Uzbekistan":"Uzbekistan","Colombia":"Colombia","England":"England","Croatia":"Croatia",
+  "Ghana":"Ghana","Panama":"Panama","Korea Republic":"Korea Republic",
+};
+
+// Fallback static DISC (used until live data loads)
 let DISC=[
-  // Source: ESPN FIFA World Cup Discipline Stats (screenshot, 18 Jun 2026)
-  {team:"South Africa",          y:2, r:2},
-  {team:"Paraguay",              y:5, r:0},
-  {team:"Mexico",                y:1, r:1},
-  {team:"Côte d'Ivoire",         y:3, r:0},
-  {team:"Scotland",              y:3, r:0},
-  {team:"Portugal",              y:3, r:0},
-  {team:"Bosnia & Herzegovina",  y:3, r:0},
-  {team:"Netherlands",           y:3, r:0},
-  {team:"Qatar",                 y:2, r:0},
-  {team:"Panama",                y:2, r:0},
-  {team:"Egypt",                 y:2, r:0},
-  {team:"Belgium",               y:2, r:0},
-  {team:"Canada",                y:2, r:0},
-  {team:"Brazil",                y:2, r:0},
-  {team:"Ghana",                 y:1, r:0},
-  {team:"Iraq",                  y:1, r:0},
-  {team:"DR Congo",              y:1, r:0},
-  {team:"Haiti",                 y:1, r:0},
-  {team:"Cabo Verde",            y:1, r:0},
-  {team:"Uzbekistan",            y:1, r:0},
-  {team:"United States",         y:1, r:0},
-  {team:"Tunisia",               y:1, r:0},
-  {team:"Saudi Arabia",          y:1, r:0},
-  {team:"Switzerland",           y:1, r:0},
-  {team:"Austria",               y:1, r:0},
-  {team:"Iran",                  y:1, r:0},
-  {team:"Türkiye",               y:1, r:0},
-  {team:"Korea Republic",        y:1, r:0},
-  {team:"Ecuador",               y:1, r:0},
-  {team:"Colombia",              y:1, r:0},
-  {team:"Spain",                 y:1, r:0},
-  {team:"Curaçao",               y:0, r:0},
-  {team:"Jordan",                y:0, r:0},
-  {team:"Morocco",               y:0, r:0},
-  {team:"New Zealand",           y:0, r:0},
-  {team:"Senegal",               y:0, r:0},
-  {team:"Australia",             y:0, r:0},
-  {team:"Japan",                 y:0, r:0},
-  {team:"Algeria",               y:0, r:0},
-  {team:"Germany",               y:0, r:0},
-  {team:"France",                y:0, r:0},
-  {team:"Croatia",               y:0, r:0},
-  {team:"Sweden",                y:0, r:0},
-  {team:"Norway",                y:0, r:0},
-  {team:"Czechia",               y:0, r:0},
-  {team:"England",               y:0, r:0},
-  {team:"Uruguay",               y:0, r:0},
-  {team:"Argentina",             y:0, r:0},
+  {team:"South Africa",y:2,r:2},{team:"Paraguay",y:5,r:0},{team:"Mexico",y:1,r:1},
+  {team:"Côte d'Ivoire",y:3,r:0},{team:"Scotland",y:3,r:0},{team:"Portugal",y:3,r:0},
+  {team:"Bosnia & Herzegovina",y:3,r:0},{team:"Netherlands",y:3,r:0},
+  {team:"Qatar",y:2,r:0},{team:"Panama",y:2,r:0},{team:"Egypt",y:2,r:0},
+  {team:"Belgium",y:2,r:0},{team:"Canada",y:2,r:0},{team:"Brazil",y:2,r:0},
+  {team:"Ghana",y:1,r:0},{team:"Iraq",y:1,r:0},{team:"DR Congo",y:1,r:0},
+  {team:"Haiti",y:1,r:0},{team:"Cabo Verde",y:1,r:0},{team:"Uzbekistan",y:1,r:0},
+  {team:"United States",y:1,r:0},{team:"Tunisia",y:1,r:0},{team:"Saudi Arabia",y:1,r:0},
+  {team:"Switzerland",y:1,r:0},{team:"Austria",y:1,r:0},{team:"Iran",y:1,r:0},
+  {team:"Türkiye",y:1,r:0},{team:"Korea Republic",y:1,r:0},{team:"Ecuador",y:1,r:0},
+  {team:"Colombia",y:1,r:0},{team:"Spain",y:1,r:0},{team:"Curaçao",y:0,r:0},
+  {team:"Jordan",y:0,r:0},{team:"Morocco",y:0,r:0},{team:"New Zealand",y:0,r:0},
+  {team:"Senegal",y:0,r:0},{team:"Australia",y:0,r:0},{team:"Japan",y:0,r:0},
+  {team:"Algeria",y:0,r:0},{team:"Germany",y:0,r:0},{team:"France",y:0,r:0},
+  {team:"Croatia",y:0,r:0},{team:"Sweden",y:0,r:0},{team:"Norway",y:0,r:0},
+  {team:"Czechia",y:0,r:0},{team:"England",y:0,r:0},{team:"Uruguay",y:0,r:0},
+  {team:"Argentina",y:0,r:0},
 ];
 const cs=d=>d.y+d.r*2;
+
+// Single shared API fetch — updates both scores and discipline
+let liveFetchInProgress=false;
+async function fetchLiveData(){
+  if(liveFetchInProgress)return;
+  liveFetchInProgress=true;
+  // Update any "Loading…" notices
+  document.querySelectorAll('.live-status').forEach(el=>el.textContent='Fetching live data…');
+  try{
+    const url='https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
+    const res=await fetch(url,{mode:'cors'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+
+    // ── SCORES ──────────────────────────────────────────
+    let scoresUpdated=0;
+    (data.events||[]).forEach(ev=>{
+      const comp=ev.competitions?.[0];
+      if(!comp)return;
+      const competitors=comp.competitors||[];
+      const home=competitors.find(c=>c.homeAway==='home');
+      const away=competitors.find(c=>c.homeAway==='away');
+      if(!home||!away)return;
+      const homeName=ESPN_NAME_MAP[home.team.displayName]||home.team.displayName;
+      const awayName=ESPN_NAME_MAP[away.team.displayName]||away.team.displayName;
+      const completed=comp.status?.type?.completed===true;
+      const inProgress=comp.status?.type?.state==='in';
+      const homeScore=home.score;
+      const awayScore=away.score;
+
+      // Find matching entry in MATCHES by team names
+      const match=MATCHES.find(m=>
+        m.h.toLowerCase()===homeName.toLowerCase()&&
+        m.a.toLowerCase()===awayName.toLowerCase()
+      );
+      if(match){
+        if(completed){
+          match.score=`${homeScore}–${awayScore}`;
+          match.done=true;
+          scoresUpdated++;
+        } else if(inProgress){
+          match.score=`${homeScore}–${awayScore}*`;// * = live
+          match.done=false;
+        }
+      }
+    });
+
+    // ── DISCIPLINE ───────────────────────────────────────
+    const tally={};
+    (data.events||[]).forEach(ev=>{
+      (ev.competitions||[]).forEach(comp=>{
+        const teamMap={};
+        (comp.competitors||[]).forEach(c=>{teamMap[c.id]=c.team.displayName;});
+        (comp.details||[]).forEach(d=>{
+          if(!d.yellowCard&&!d.redCard)return;
+          const espnName=teamMap[d.team?.id];
+          const name=ESPN_NAME_MAP[espnName]||espnName;
+          if(!name)return;
+          if(!tally[name])tally[name]={team:name,y:0,r:0};
+          if(d.yellowCard)tally[name].y++;
+          if(d.redCard)tally[name].r++;
+        });
+      });
+    });
+    if(Object.keys(tally).length>0)DISC=Object.values(tally);
+
+    // ── REBUILD ──────────────────────────────────────────
+    // Recompute group positions from updated MATCHES
+    Object.assign(PROG_CACHE, computeGroupPos());
+    // Update match pill
+    const pill=document.getElementById('matches-pill');
+    if(pill)pill.textContent=MATCHES.filter(m=>m.done).length+' Matches Played';
+    // Rebuild whichever pages are visible
+    const activePage=document.querySelector('.page.active')?.id?.replace('page-','');
+    if(activePage==='home')buildHome();
+    else if(activePage==='schedule'){buildSB();buildMPN();buildSchedule();}
+    else if(activePage==='teams')buildTeams();
+    else if(activePage==='dark')buildDark();
+    else if(activePage==='disc')buildDisc();
+
+    const now=new Date().toLocaleTimeString();
+    document.querySelectorAll('.live-status').forEach(el=>el.textContent=`Live · updated ${now}`);
+  }catch(e){
+    console.warn('Live fetch failed:',e);
+    document.querySelectorAll('.live-status').forEach(el=>el.textContent='Live fetch unavailable — showing cached data');
+  }finally{
+    liveFetchInProgress=false;
+  }
+}
+
+// Backward-compat alias
+const fetchLiveDisc=fetchLiveData;
+
 
 const MATCHES=[
   {ds:"Thu 11 Jun",H:2, M:0, g:"A",h:"Mexico",         a:"South Africa",          score:"2–0",done:true},
@@ -995,7 +1077,7 @@ function buildSchedule(){
   document.getElementById('sched-eye').textContent=`${p.name}'s Schedule · ${p.tz}`;
   document.getElementById('sched-title').innerHTML=`${p.name}<em>'s Matches</em>`;
   const sg=off===0?'All times GMT':`All times in ${p.tz} (GMT${off>0?'+':''}${off})`;
-  document.getElementById('sched-sub').textContent=sg;
+  document.getElementById('sched-sub').innerHTML=`${sg} · <span class="live-status">–</span>`;
 
   const byD={};
   my.forEach(m=>{const dd=fD(m.ds,m.H,off);if(!byD[dd])byD[dd]=[];byD[dd].push(m);});
@@ -1007,13 +1089,16 @@ function buildSchedule(){
     h+=`<div class="sec"><span class="sec-lbl">${date}</span></div>`;
     ms.forEach(m=>{
       const myH=mt.has(m.h.toLowerCase()),myA=mt.has(m.a.toLowerCase());
-      h+=`<div class="mrow${(myH||myA)?' hi':''}${m.done?' done':''}">
-        <div class="dot ${m.done?'dot-done':'dot-up'}"></div>
+      const isLive=m.score&&m.score.endsWith('*');
+      const scoreDisplay=isLive?m.score.replace('*',''):m.score;
+      h+=`<div class="mrow${(myH||myA)?' hi':''}${m.done?' done':''}${isLive?' live':''}">
+        <div class="dot ${isLive?'dot-live':m.done?'dot-done':'dot-up'}"></div>
         <div class="mrow-time">${fT(m.H,m.M,off)}</div>
         <div class="mrow-grp">GRP ${m.g}</div>
         <div class="mrow-teams">${ttag(m.h,myH)}<span class="mrow-vs">vs</span>${ttag(m.a,myA)}</div>
-        ${m.done&&m.score?`<div class="mrow-score">${m.score}</div>`:''}
-        ${!m.done?`<div class="mrow-up">Upcoming</div>`:''}
+        ${m.done&&m.score?`<div class="mrow-score">${scoreDisplay}</div>`:''}
+        ${isLive?`<div class="mrow-score" style="color:var(--green)">${scoreDisplay} <span style="font-size:10px;animation:pulse 1s infinite">●</span></div>`:''}
+        ${!m.done&&!isLive?`<div class="mrow-up">Upcoming</div>`:''}
       </div>`;
     });
   });
@@ -1059,7 +1144,7 @@ function buildDisc(){
     return{name:p.name,pi,y,r,s:y+r*2,totalR:r,cards};
   }).sort((a,b)=>b.s-a.s||b.totalR-a.totalR);
 
-  let h=`<div class="data-notice">📋 Card data sourced from ESPN FIFA World Cup Discipline Stats (screenshot, 18 Jun 2026).</div>`;
+  let h=`<div class="data-notice">📋 Card data loaded live from the ESPN API · <span class="live-status">–</span></div>`;
   h+=`<div class="sec"><span class="sec-lbl">Leaderboard</span><span style="font-size:11px;color:var(--text3);margin-left:8px">· ties broken by most red cards</span></div>`;
 
   rows.forEach((row,i)=>{
@@ -1224,9 +1309,10 @@ function showPage(id){
   if(id==='schedule'){buildSB();buildMPN();buildSchedule();}
   else if(id==='teams'){buildTeams();}
   else if(id==='dark'){buildDark();}
-  else if(id==='disc'){buildDisc();}
+  else if(id==='disc'){buildDisc();fetchLiveData();}
   else{buildHome();}
   buildSB();
+  fetchLiveData();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1246,6 +1332,9 @@ function showPlayer(pi){
 buildSB();
 buildHome();
 document.getElementById('matches-pill').textContent = MATCHES.filter(m=>m.done).length + ' Matches Played';
+fetchLiveData();
+// Auto-refresh live data every 60 seconds
+setInterval(fetchLiveData, 60000);
 </script>
 </body>
 </html>
