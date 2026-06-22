@@ -29,6 +29,7 @@
   --elim-bg: #fdecea;  --elim-c: #b91c1c;
   --tbd-bg:  #eef3f8;  --tbd-c:  #3a5068;
   --possible-bg: #fff7e0; --possible-c: #7a5800;
+  --won-bg: #dbeafe; --won-c: #1e3a8a;
   --dark-bg: #fffbea;  --dark-c: #7a5800;
   --sw: 240px;
   --th: 60px;
@@ -203,6 +204,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
 .tag-elim{background:var(--elim-bg);color:var(--elim-c)}
 .tag-tbd {background:var(--tbd-bg); color:var(--tbd-c)}
 .tag-possible{background:var(--possible-bg);color:var(--possible-c)}
+.tag-won{background:var(--won-bg);color:var(--won-c);font-weight:700}
 .tag-dark{background:var(--dark-bg);color:var(--dark-c)}
 .tag-mine{background:var(--navy);color:var(--white);border:1px solid rgba(2,185,6,0.4)}
 
@@ -710,12 +712,81 @@ function computeGroupPos(){
   const result={};
   Object.entries(tables).forEach(([g,teamsObj])=>{
     const teams=Object.values(teamsObj);
-    // Only assign positions if at least one match in this group has been played
     const hasPlayed=teams.some(t=>t.played>0);
     if(!hasPlayed)return;
-    // Sort by pts, then GD, then GF
-    const sorted=[...teams].sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+
+    // Build head-to-head record between any two teams
+    function h2h(tA, tB){
+      let pts={[tA]:0,[tB]:0}, gf={[tA]:0,[tB]:0}, ga={[tA]:0,[tB]:0};
+      MATCHES.filter(m=>m.done&&m.score&&m.g===g&&!m.score.endsWith('*')).forEach(m=>{
+        const [hs,as]=m.score.split('–').map(Number);
+        if(m.h===tA&&m.a===tB){
+          gf[tA]+=hs;ga[tA]+=as;gf[tB]+=as;ga[tB]+=hs;
+          if(hs>as)pts[tA]+=3; else if(hs<as)pts[tB]+=3; else{pts[tA]+=1;pts[tB]+=1;}
+        } else if(m.h===tB&&m.a===tA){
+          gf[tB]+=hs;ga[tB]+=as;gf[tA]+=as;ga[tA]+=hs;
+          if(hs>as)pts[tB]+=3; else if(hs<as)pts[tA]+=3; else{pts[tA]+=1;pts[tB]+=1;}
+        }
+      });
+      if(pts[tA]!==pts[tB]) return pts[tB]-pts[tA];
+      const gdA=(gf[tA]-ga[tA]), gdB=(gf[tB]-ga[tB]);
+      if(gdA!==gdB) return gdB-gdA;
+      if(gf[tA]!==gf[tB]) return gf[tB]-gf[tA];
+      return 0;
+    }
+
+    const sorted=[...teams].sort((a,b)=>{
+      if(b.pts!==a.pts) return b.pts-a.pts;
+      const hth=h2h(a.team,b.team);
+      if(hth!==0) return hth;
+      if(b.gd!==a.gd) return b.gd-a.gd;
+      return b.gf-a.gf;
+    });
     sorted.forEach((t,i)=>{result[t.team]=i+1;});
+
+    // Compute qualification status for each team
+    const TOTAL=3;
+    sorted.forEach(t=>{
+      const others=sorted.filter(x=>x.team!==t.team);
+      const remaining=TOTAL-t.played;
+      const maxPts=t.pts+remaining*3;
+
+      // Won group: no other team can finish above t
+      // i.e. no team can beat t's current pts, AND any team that can match t's pts
+      // has already lost to t head-to-head
+      const canWinGroup=others.some(o=>{
+        const oMaxPts=o.pts+(TOTAL-o.played)*3;
+        if(oMaxPts>t.pts) return true; // can outscore t
+        if(oMaxPts===t.pts){
+          // Can match t's pts — check h2h result
+          // If h2h already played and t won, o can't overtake
+          // If h2h not yet played, o could match and beat t on h2h
+          const played=MATCHES.filter(m=>m.done&&m.score&&m.g===g&&
+            ((m.h===t.team&&m.a===o.team)||(m.h===o.team&&m.a===t.team)));
+          if(played.length===0) return true; // h2h not played yet — still possible
+          // h2h played — did o win or draw?
+          const m=played[0];
+          const [hs,as]=m.score.split('–').map(Number);
+          const tScored=m.h===t.team?hs:as;
+          const oScored=m.h===o.team?hs:as;
+          if(oScored>tScored) return true; // o won h2h
+          if(oScored===tScored) return true; // drew h2h, still need further tiebreakers
+          return false; // t won h2h, o can't overtake even if they match pts
+        }
+        return false; // oMaxPts < t.pts, can't reach t
+      });
+      if(!canWinGroup){QUAL_CACHE[t.team]='won';return;}
+
+      // Qualified top 2: at most 1 team can possibly finish above t
+      const canBeat=others.filter(o=>(o.pts+(TOTAL-o.played)*3)>t.pts).length;
+      if(canBeat<=1){QUAL_CACHE[t.team]='qualified';return;}
+
+      // Eliminated: 3+ teams already have more pts than t can ever reach
+      const guaranteedAbove=others.filter(o=>o.pts>maxPts).length;
+      if(guaranteedAbove>=3){QUAL_CACHE[t.team]='eliminated';return;}
+
+      QUAL_CACHE[t.team]='tbd';
+    });
   });
   return result;
 }
@@ -827,6 +898,7 @@ async function fetchLiveData(){
 
     // ── REBUILD ──────────────────────────────────────────
     // Recompute group positions from updated MATCHES
+    Object.keys(QUAL_CACHE).forEach(k=>delete QUAL_CACHE[k]);
     Object.assign(PROG_CACHE, computeGroupPos());
     // Update match pill
     const pill=document.getElementById('matches-pill');
@@ -878,23 +950,23 @@ const MATCHES=[
   {ds:"Wed 17 Jun",H:20,M:0, g:"L",h:"England",        a:"Croatia",               score:"4–2",done:true},
   {ds:"Wed 17 Jun",H:23,M:0, g:"L",h:"Ghana",          a:"Panama",                score:"1–0",done:true},
   {ds:"Thu 18 Jun",H:2, M:0, g:"K",h:"Uzbekistan",     a:"Colombia",              score:"1–3",done:true},
-  {ds:"Thu 18 Jun",H:16,M:0, g:"A",h:"Czechia",        a:"South Africa",          score:null, done:false},
-  {ds:"Thu 18 Jun",H:19,M:0, g:"B",h:"Switzerland",    a:"Bosnia & Herzegovina",  score:null, done:false},
-  {ds:"Thu 18 Jun",H:22,M:0, g:"B",h:"Canada",         a:"Qatar",                 score:null, done:false},
-  {ds:"Fri 19 Jun",H:1, M:0, g:"A",h:"Mexico",         a:"Korea Republic",        score:null, done:false},
-  {ds:"Fri 19 Jun",H:19,M:0, g:"D",h:"United States",            a:"Australia",             score:null, done:false},
-  {ds:"Fri 19 Jun",H:22,M:0, g:"C",h:"Scotland",       a:"Morocco",               score:null, done:false},
-  {ds:"Sat 20 Jun",H:0, M:30,g:"C",h:"Brazil",         a:"Haiti",                 score:null, done:false},
-  {ds:"Sat 20 Jun",H:3, M:0, g:"D",h:"Türkiye",        a:"Paraguay",              score:null, done:false},
-  {ds:"Sat 20 Jun",H:17,M:0, g:"F",h:"Netherlands",    a:"Sweden",                score:null, done:false},
-  {ds:"Sat 20 Jun",H:20,M:0, g:"E",h:"Germany",        a:"Côte d'Ivoire",         score:null, done:false},
-  {ds:"Sun 21 Jun",H:3, M:0, g:"E",h:"Ecuador",        a:"Curaçao",               score:null, done:false},
-  {ds:"Sun 21 Jun",H:4, M:0, g:"F",h:"Tunisia",        a:"Japan",                 score:null, done:false},
-  {ds:"Sun 21 Jun",H:16,M:0, g:"H",h:"Spain",          a:"Saudi Arabia",          score:null, done:false},
-  {ds:"Sun 21 Jun",H:19,M:0, g:"G",h:"Belgium",        a:"Iran",                  score:null, done:false},
-  {ds:"Sun 21 Jun",H:22,M:0, g:"H",h:"Uruguay",        a:"Cabo Verde",            score:null, done:false},
-  {ds:"Mon 22 Jun",H:1, M:0, g:"G",h:"New Zealand",    a:"Egypt",                 score:null, done:false},
-  {ds:"Mon 22 Jun",H:17,M:0, g:"J",h:"Argentina",      a:"Austria",               score:null, done:false},
+  {ds:"Thu 18 Jun",H:16,M:0, g:"A",h:"Czechia",        a:"South Africa",          score:"1–1",done:true},
+  {ds:"Thu 18 Jun",H:19,M:0, g:"B",h:"Switzerland",    a:"Bosnia & Herzegovina",  score:"4–1",done:true},
+  {ds:"Thu 18 Jun",H:22,M:0, g:"B",h:"Canada",         a:"Qatar",                 score:"6–0",done:true},
+  {ds:"Fri 19 Jun",H:1, M:0, g:"A",h:"Mexico",         a:"Korea Republic",        score:"1–0",done:true},
+  {ds:"Fri 19 Jun",H:19,M:0, g:"D",h:"United States",            a:"Australia",             score:"2–0",done:true},
+  {ds:"Fri 19 Jun",H:22,M:0, g:"C",h:"Scotland",       a:"Morocco",               score:"0–1",done:true},
+  {ds:"Sat 20 Jun",H:0, M:30,g:"C",h:"Brazil",         a:"Haiti",                 score:"3–0",done:true},
+  {ds:"Sat 20 Jun",H:3, M:0, g:"D",h:"Türkiye",        a:"Paraguay",              score:"0–1",done:true},
+  {ds:"Sat 20 Jun",H:17,M:0, g:"F",h:"Netherlands",    a:"Sweden",                score:"5–1",done:true},
+  {ds:"Sat 20 Jun",H:20,M:0, g:"E",h:"Germany",        a:"Côte d'Ivoire",         score:"2–1",done:true},
+  {ds:"Sun 21 Jun",H:3, M:0, g:"E",h:"Ecuador",        a:"Curaçao",               score:"0–0",done:true},
+  {ds:"Sun 21 Jun",H:4, M:0, g:"F",h:"Tunisia",        a:"Japan",                 score:"0–4",done:true},
+  {ds:"Sun 21 Jun",H:16,M:0, g:"H",h:"Spain",          a:"Saudi Arabia",          score:"4–0",done:true},
+  {ds:"Sun 21 Jun",H:19,M:0, g:"G",h:"Belgium",        a:"Iran",                  score:"1–1",done:true},
+  {ds:"Sun 21 Jun",H:22,M:0, g:"H",h:"Uruguay",        a:"Cabo Verde",            score:"2–2",done:true},
+  {ds:"Mon 22 Jun",H:1, M:0, g:"G",h:"New Zealand",    a:"Egypt",                 score:"1–3",done:true},
+  {ds:"Mon 22 Jun",H:17,M:0, g:"J",h:"Argentina",      a:"Austria",               score:"2–0",done:true},
   {ds:"Mon 22 Jun",H:21,M:0, g:"I",h:"France",         a:"Iraq",                  score:null, done:false},
   {ds:"Tue 23 Jun",H:0, M:0, g:"I",h:"Norway",         a:"Senegal",               score:null, done:false},
   {ds:"Tue 23 Jun",H:3, M:0, g:"J",h:"Jordan",         a:"Algeria",               score:null, done:false},
@@ -929,8 +1001,10 @@ const MATCHES=[
 ];
 
 // Compute group positions now that MATCHES is defined
+const QUAL_CACHE={};
 const PROG_CACHE=computeGroupPos();
 const prog=t=>PROG_CACHE[t]||0; // returns 1,2,3,4 or 0 if unknown
+const qual=t=>QUAL_CACHE[t]||'tbd'; // returns won/qualified/eliminated/tbd
 
 // ══════════════════════════════════════════════════════
 //  HELPERS
@@ -943,13 +1017,21 @@ function fD(ds,h,off){
   if(tot<0)return DAYS[(i+6)%7]+' '+rest;
   return ds;
 }
-function posClass(pos){
+function posClass(t){
+  const q=qual(t), pos=prog(t);
+  if(q==='won')return'tag-won';
+  if(q==='qualified')return'tag-adv';
+  if(q==='eliminated')return'tag-elim';
   if(pos===1||pos===2)return'tag-adv';
   if(pos===3)return'tag-possible';
   if(pos===4)return'tag-elim';
   return'tag-tbd';
 }
-function posLabel(pos){
+function posLabel(t){
+  const q=qual(t), pos=prog(t);
+  if(q==='won')return'🏆 Won Group';
+  if(q==='qualified')return'✅ Qualified';
+  if(q==='eliminated')return'❌ Eliminated';
   if(pos===1)return'1st';
   if(pos===2)return'2nd';
   if(pos===3)return'3rd';
@@ -957,12 +1039,10 @@ function posLabel(pos){
   return'–';
 }
 function ptag(t){
-  const pos=prog(t);
-  return `<span class="tag ${posClass(pos)}">${posLabel(pos)}</span>`;
+  return `<span class="tag ${posClass(t)}">${posLabel(t)}</span>`;
 }
 function ttag(t,mine){
-  const pos=prog(t);
-  const c=pos?posClass(pos):(mine?'tag-mine':'tag-tbd');
+  const c=prog(t)?posClass(t):(mine?'tag-mine':'tag-tbd');
   return `<span class="tag ${c}">${t}</span>`;
 }
 
