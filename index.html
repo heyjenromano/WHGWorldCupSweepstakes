@@ -273,6 +273,19 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
 
 /* ─── FORM ───────────────────────────────────────────────── */
 
+/* ─── BRACKET ─────────────────────────────────────────── */
+.brow{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;margin-bottom:10px;
+}
+.brow-match{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.brow-teams{display:flex;align-items:center;gap:10px}
+.brow-vs{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text3);flex-shrink:0}
+.bteam{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;border-left-width:3px}
+.bteam-tbd{border-left-color:var(--border2)!important;opacity:0.6}
+.bteam-name{display:block;font-size:13px;font-weight:600;color:var(--text1);margin-bottom:5px}
+.bteam-owner{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:0.04em}
+
 /* ─── TZ NOTICE ──────────────────────────────────────────── */
 .tz-bar{
   background:rgba(2,185,6,0.08);border:1px solid rgba(2,185,6,0.2);
@@ -450,6 +463,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
     <button class="tnav-btn" onclick="showPage('schedule')">Schedules</button>
     <button class="tnav-btn" onclick="showPage('dark')">Dark Horse</button>
     <button class="tnav-btn" onclick="showPage('disc')">Discipline</button>
+    <button class="tnav-btn" onclick="showPage('bracket')">Bracket</button>
   </nav>
   <!-- Hamburger — visible only on mobile via CSS -->
   <button class="hamburger" id="hamburger-btn" onclick="openDrawer()" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
@@ -493,6 +507,10 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="5" y="1" width="6" height="14" rx="1"/></svg>
     Discipline
   </button>
+  <button class="drawer-btn" id="dbtn-bracket" onclick="drawerNav('bracket')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4h4v3H2zM10 4h4v3h-4zM2 10h4v3H2zM10 10h4v3h-4zM6 5.5h4M6 11.5h4M8 5.5v6"/></svg>
+    Bracket
+  </button>
 
   <div class="drawer-divider"></div>
 
@@ -527,6 +545,10 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
       <button class="sb-btn" onclick="showPage('disc')">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="5" y="1" width="6" height="14" rx="1"/></svg>
         Discipline
+      </button>
+      <button class="sb-btn" onclick="showPage('bracket')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4h4v3H2zM10 4h4v3h-4zM2 10h4v3H2zM10 10h4v3h-4zM6 5.5h4M6 11.5h4M8 5.5v6"/></svg>
+        Bracket
       </button>
     </div>
     <div class="sb-divider"></div>
@@ -604,6 +626,16 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
         <div class="hero-sub">Most cards across the tournament · <span class="ycard"></span> Yellow = 1pt &nbsp; <span class="rcard"></span> Red = 2pts</div>
       </div>
       <div id="disc-body"></div>
+    </div>
+
+    <!-- ── BRACKET ─────────────────────────────────────── -->
+    <div class="page" id="page-bracket">
+      <div class="hero">
+        <div class="hero-eye">Round of 32</div>
+        <div class="hero-title" style="color:var(--white)">Knockout <em>Bracket</em></div>
+        <div class="hero-sub">28 Jun – 3 Jul · Teams coloured by owner</div>
+      </div>
+      <div id="bracket-body"></div>
     </div>
 
   </main>
@@ -1371,7 +1403,7 @@ function syncDrawerActive(id){
 // ══════════════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════════════
-const PIDS=['home','teams','schedule','dark','disc'];
+const PIDS=['home','teams','schedule','dark','disc','bracket'];
 function showPage(id){
   PIDS.forEach(pid=>{
     document.getElementById('page-'+pid).classList.toggle('active',pid===id);
@@ -1390,6 +1422,7 @@ function showPage(id){
   else if(id==='teams'){buildTeams();}
   else if(id==='dark'){buildDark();}
   else if(id==='disc'){buildDisc();fetchLiveData();}
+  else if(id==='bracket'){buildBracket();}
   else{buildHome();}
   buildSB();
   fetchLiveData();
@@ -1404,6 +1437,97 @@ function showPlayer(pi){
     // Briefly highlight the card
     if(el){el.style.outline='2px solid var(--green)';setTimeout(()=>el.style.outline='',1200);}
   },100);
+}
+
+// ══════════════════════════════════════════════════════
+//  BRACKET
+// ══════════════════════════════════════════════════════
+
+// Fixed Round of 32 bracket (FIFA pre-determined structure)
+// slot: label shown when team unknown, home/away: group position descriptors
+const R32=[
+  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
+  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},
+  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},
+  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},
+  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"3rd C/D/F/G/H"}},
+  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"3rd C/E/F/H/I"}},
+  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"3rd E/H/I/J/K"}},
+  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"3rd A/E/H/I/J"}},
+  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"3rd B/E/F/I/J"}},
+  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},
+  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"3rd E/F/G/I/J"}},
+  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},
+  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},
+  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"3rd D/E/I/J/L"}},
+  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},
+  {date:"Fri 3 Jul",  match:16, home:{label:"E1"}, away:{label:"3rd A/B/C/D/F"}},
+];
+
+// Map group position labels to actual teams from PROG_CACHE
+function resolveSlot(label){
+  // Parse "X1" or "X2" labels
+  const m=label.match(/^([A-L])([12])$/);
+  if(!m) return null; // 3rd place slots — TBD until group stage ends
+  const [,g,pos]=m;
+  const posNum=parseInt(pos);
+  // Find team in that group position
+  const team=Object.entries(PROG_CACHE).find(([t,p])=>{
+    // Check team is in group g
+    const inGroup=MATCHES.some(mx=>mx.g===g&&(mx.h===t||mx.a===t));
+    return inGroup&&p===posNum;
+  });
+  return team?team[0]:null;
+}
+
+function ownerOf(team){
+  if(!team)return null;
+  return PARTS.find(p=>p.teams.some(t=>t.toLowerCase()===team.toLowerCase()))||null;
+}
+
+function buildBracket(){
+  // Group R32 matches by date
+  const byDate={};
+  R32.forEach(m=>{
+    if(!byDate[m.date])byDate[m.date]=[];
+    byDate[m.date].push(m);
+  });
+
+  let h='';
+  Object.entries(byDate).forEach(([date,matches])=>{
+    h+=`<div class="sec"><span class="sec-lbl">${date}</span></div>`;
+    matches.forEach(m=>{
+      const homeTeam=resolveSlot(m.home.label);
+      const awayTeam=resolveSlot(m.away.label);
+      const homeOwner=ownerOf(homeTeam);
+      const awayOwner=ownerOf(awayTeam);
+
+      h+=`<div class="brow">
+        <div class="brow-match">R32 · Match ${m.match}</div>
+        <div class="brow-teams">
+          ${bracketTeamEl(homeTeam, homeOwner, m.home.label)}
+          <span class="brow-vs">vs</span>
+          ${bracketTeamEl(awayTeam, awayOwner, m.away.label)}
+        </div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('bracket-body').innerHTML=h;
+}
+
+function bracketTeamEl(team, owner, fallback){
+  if(!team){
+    return `<div class="bteam bteam-tbd"><span class="bteam-name">${fallback}</span><span class="bteam-owner">TBD</span></div>`;
+  }
+  const bg=owner?owner.av.bg:'var(--panel2)';
+  const c=owner?owner.av.c:'var(--text2)';
+  const ownerName=owner?owner.name:'–';
+  const q=qual(team);
+  return `<div class="bteam" style="border-left:3px solid ${bg}">
+    <span class="bteam-name">${team}</span>
+    <span class="bteam-owner" style="background:${bg};color:${c}">${ownerName}</span>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════════════
