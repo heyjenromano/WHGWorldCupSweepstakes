@@ -839,6 +839,7 @@ const ESPN_NAME_MAP={
   "Austria":"Austria","Jordan":"Jordan","Portugal":"Portugal","Congo DR":"DR Congo",
   "Uzbekistan":"Uzbekistan","Colombia":"Colombia","England":"England","Croatia":"Croatia",
   "Ghana":"Ghana","Panama":"Panama","Korea Republic":"Korea Republic",
+  "Ivory Coast":"Côte d'Ivoire",
 };
 
 // Fallback static DISC (used until live data loads)
@@ -942,6 +943,7 @@ async function fetchLiveData(){
     else if(activePage==='teams')buildTeams();
     else if(activePage==='dark')buildDark();
     else if(activePage==='disc')buildDisc();
+    else if(activePage==='bracket')buildBracket();
 
     const now=new Date().toLocaleTimeString();
     document.querySelectorAll('.live-status').forEach(el=>el.textContent=`Live · updated ${now}`);
@@ -999,25 +1001,25 @@ const MATCHES=[
   {ds:"Sun 21 Jun",H:22,M:0, g:"H",h:"Uruguay",        a:"Cabo Verde",            score:"2–2",done:true},
   {ds:"Mon 22 Jun",H:1, M:0, g:"G",h:"New Zealand",    a:"Egypt",                 score:"1–3",done:true},
   {ds:"Mon 22 Jun",H:17,M:0, g:"J",h:"Argentina",      a:"Austria",               score:"2–0",done:true},
-  {ds:"Mon 22 Jun",H:21,M:0, g:"I",h:"France",         a:"Iraq",                  score:null, done:false},
-  {ds:"Tue 23 Jun",H:0, M:0, g:"I",h:"Norway",         a:"Senegal",               score:null, done:false},
-  {ds:"Tue 23 Jun",H:3, M:0, g:"J",h:"Jordan",         a:"Algeria",               score:null, done:false},
-  {ds:"Tue 23 Jun",H:17,M:0, g:"K",h:"Portugal",       a:"Uzbekistan",            score:null, done:false},
-  {ds:"Tue 23 Jun",H:20,M:0, g:"L",h:"England",        a:"Ghana",                 score:null, done:false},
-  {ds:"Tue 23 Jun",H:23,M:0, g:"L",h:"Panama",         a:"Croatia",               score:null, done:false},
-  {ds:"Wed 24 Jun",H:1, M:0, g:"A",h:"Mexico",         a:"Czechia",               score:null, done:false},
-  {ds:"Wed 24 Jun",H:1, M:0, g:"A",h:"South Africa",   a:"Korea Republic",        score:null, done:false},
-  {ds:"Wed 24 Jun",H:2, M:0, g:"K",h:"Colombia",       a:"DR Congo",              score:null, done:false},
-  {ds:"Wed 24 Jun",H:19,M:0, g:"B",h:"Switzerland",    a:"Canada",                score:null, done:false},
-  {ds:"Wed 24 Jun",H:19,M:0, g:"B",h:"Bosnia & Herzegovina",a:"Qatar",            score:null, done:false},
-  {ds:"Wed 24 Jun",H:22,M:0, g:"C",h:"Scotland",       a:"Brazil",                score:null, done:false},
-  {ds:"Wed 24 Jun",H:22,M:0, g:"C",h:"Morocco",        a:"Haiti",                 score:null, done:false},
-  {ds:"Thu 25 Jun",H:2, M:0, g:"D",h:"Türkiye",        a:"United States",                   score:null, done:false},
-  {ds:"Thu 25 Jun",H:2, M:0, g:"D",h:"Paraguay",       a:"Australia",             score:null, done:false},
-  {ds:"Thu 25 Jun",H:20,M:0, g:"E",h:"Ecuador",        a:"Germany",               score:null, done:false},
-  {ds:"Thu 25 Jun",H:20,M:0, g:"E",h:"Curaçao",        a:"Côte d'Ivoire",         score:null, done:false},
-  {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Japan",          a:"Sweden",                score:null, done:false},
-  {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Tunisia",        a:"Netherlands",           score:null, done:false},
+  {ds:"Mon 22 Jun",H:21,M:0, g:"I",h:"France",         a:"Iraq",                  score:"3–0",done:true},
+  {ds:"Tue 23 Jun",H:0, M:0, g:"I",h:"Norway",         a:"Senegal",               score:"3–2",done:true},
+  {ds:"Tue 23 Jun",H:3, M:0, g:"J",h:"Jordan",         a:"Algeria",               score:"1–2",done:true},
+  {ds:"Tue 23 Jun",H:17,M:0, g:"K",h:"Portugal",       a:"Uzbekistan",            score:"5–0",done:true},
+  {ds:"Tue 23 Jun",H:20,M:0, g:"L",h:"England",        a:"Ghana",                 score:"0–0",done:true},
+  {ds:"Tue 23 Jun",H:23,M:0, g:"L",h:"Panama",         a:"Croatia",               score:"0–1",done:true},
+  {ds:"Wed 24 Jun",H:1, M:0, g:"A",h:"Mexico",         a:"Czechia",               score:"3–0",done:true},
+  {ds:"Wed 24 Jun",H:1, M:0, g:"A",h:"South Africa",   a:"Korea Republic",        score:"1–0",done:true},
+  {ds:"Wed 24 Jun",H:2, M:0, g:"K",h:"Colombia",       a:"DR Congo",              score:"1–0",done:true},
+  {ds:"Wed 24 Jun",H:19,M:0, g:"B",h:"Switzerland",    a:"Canada",                score:"3–1",done:true},
+  {ds:"Wed 24 Jun",H:19,M:0, g:"B",h:"Bosnia & Herzegovina",a:"Qatar",            score:"3–1",done:true},
+  {ds:"Wed 24 Jun",H:22,M:0, g:"C",h:"Scotland",       a:"Brazil",                score:"0–3",done:true},
+  {ds:"Wed 24 Jun",H:22,M:0, g:"C",h:"Morocco",        a:"Haiti",                 score:"4–2",done:true},
+  {ds:"Thu 25 Jun",H:2, M:0, g:"D",h:"Türkiye",        a:"United States",                   score:"3–2",done:true},
+  {ds:"Thu 25 Jun",H:2, M:0, g:"D",h:"Paraguay",       a:"Australia",             score:"0–0",done:true},
+  {ds:"Thu 25 Jun",H:20,M:0, g:"E",h:"Ecuador",        a:"Germany",               score:"2–1",done:true},
+  {ds:"Thu 25 Jun",H:20,M:0, g:"E",h:"Curaçao",        a:"Côte d'Ivoire",         score:"0–2",done:true},
+  {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Japan",          a:"Sweden",                score:"1–1",done:true},
+  {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Tunisia",        a:"Netherlands",           score:"1–3",done:true},
   {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Cabo Verde",     a:"Saudi Arabia",          score:null, done:false},
   {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Uruguay",        a:"Spain",                 score:null, done:false},
   {ds:"Fri 26 Jun",H:3, M:0, g:"G",h:"Egypt",          a:"Iran",                  score:null, done:false},
