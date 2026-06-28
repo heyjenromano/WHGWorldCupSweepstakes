@@ -919,7 +919,7 @@ async function fetchLiveData(){
       const homeScore=home.score;
       const awayScore=away.score;
 
-      // Find matching entry in MATCHES by team names
+      // Find matching entry in MATCHES by team names (group stage)
       const match=MATCHES.find(m=>
         m.h.toLowerCase()===homeName.toLowerCase()&&
         m.a.toLowerCase()===awayName.toLowerCase()
@@ -930,8 +930,30 @@ async function fetchLiveData(){
           match.done=true;
           scoresUpdated++;
         } else if(inProgress){
-          match.score=`${homeScore}–${awayScore}*`;// * = live
+          match.score=`${homeScore}–${awayScore}*`;
           match.done=false;
+        }
+      }
+
+      // Find matching R32 knockout match
+      const r32=R32.find(m=>{
+        const h=resolveSlot(m.home.label);
+        const a=resolveSlot(m.away.label);
+        return h&&a&&(
+          (h.toLowerCase()===homeName.toLowerCase()&&a.toLowerCase()===awayName.toLowerCase())||
+          (h.toLowerCase()===awayName.toLowerCase()&&a.toLowerCase()===homeName.toLowerCase())
+        );
+      });
+      if(r32){
+        const h=resolveSlot(r32.home.label);
+        const isFlipped=h&&h.toLowerCase()===awayName.toLowerCase();
+        const hs=isFlipped?awayScore:homeScore;
+        const as=isFlipped?homeScore:awayScore;
+        if(completed){
+          const winner=parseInt(hs)>parseInt(as)?homeName:parseInt(as)>parseInt(hs)?awayName:null;
+          KO_RESULTS[r32.match]={score:`${hs}–${as}`,winner,done:true};
+        } else if(inProgress){
+          KO_RESULTS[r32.match]={score:`${hs}–${as}*`,winner:null,done:false};
         }
       }
     });
