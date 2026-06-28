@@ -959,6 +959,7 @@ async function fetchLiveData(){
     // Recompute group positions from updated MATCHES
     Object.keys(QUAL_CACHE).forEach(k=>delete QUAL_CACHE[k]);
     Object.assign(PROG_CACHE, computeGroupPos());
+    Object.assign(QUAL_CACHE, FINAL_QUAL); // always reapply definitive qualification status
     // Update match pill
     const pill=document.getElementById('matches-pill');
     if(pill)pill.textContent=MATCHES.filter(m=>m.done).length+' Matches Played';
