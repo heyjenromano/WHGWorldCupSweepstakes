@@ -280,23 +280,23 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
   transition:border-color .15s;
 }
 .prize-tile:hover{border-color:var(--green);}
-.prize-tile-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)}
+.prize-tile-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text2)}
 .prize-tile-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px}
 .prize-tile-name{font-size:15px;font-weight:700;color:var(--text1)}
 .prize-tile-sub{font-size:11px;color:var(--text2);text-align:center}
 
 /* ─── HOME MATCH ROWS ─────────────────────────────────── */
-.hm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.hm-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
 .hm-row:last-child{border-bottom:none}
-.hm-date{font-size:10px;font-weight:600;color:var(--text3);min-width:36px;text-align:center;letter-spacing:0.04em;text-transform:uppercase;line-height:1.3}
+.hm-date{font-size:10px;font-weight:600;color:var(--text2);min-width:38px;text-align:center;letter-spacing:0.04em;text-transform:uppercase;line-height:1.3}
 .hm-teams{flex:1;display:flex;align-items:center;gap:6px}
 .hm-team{display:flex;align-items:center;gap:5px;flex:1}
 .hm-team:last-child{justify-content:flex-end}
-.hm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
 .hm-name{font-size:12px;font-weight:600;color:var(--text1)}
-.hm-winner .hm-name{color:var(--green)}
-.hm-owner{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0}
-.hm-score{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--text2);min-width:32px;text-align:center;flex-shrink:0}
+.hm-winner .hm-name{color:var(--green);font-weight:700}
+.hm-owner{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.08)}
+.hm-score{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text1);min-width:36px;text-align:center;flex-shrink:0;background:var(--panel2);border-radius:4px;padding:1px 4px}
 
 /* ─── BRACKET ─────────────────────────────────────────── */
 .brow{
@@ -1083,7 +1083,7 @@ const FINAL_QUAL={
   // Group F
   "Netherlands":"won","Japan":"qualified","Sweden":"qualified","Tunisia":"eliminated",
   // Group G
-  "Belgium":"won","Egypt":"qualified","Senegal":"qualified","New Zealand":"eliminated",
+  "Belgium":"won","Egypt":"qualified","Senegal":"qualified","New Zealand":"eliminated","Iran":"eliminated",
   // Group H
   "Spain":"won","Cabo Verde":"qualified","Uruguay":"eliminated","Saudi Arabia":"eliminated",
   // Group I
@@ -1271,6 +1271,7 @@ function buildHome(){
 
   // ── ROUND OF 32 BRACKET ──────────────────────────────
   h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Round of 32</span><span class="sec-prize">28 Jun – 3 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;">`;
 
   R32.forEach(m=>{
     const homeTeam=resolveSlot(m.home.label);
@@ -1302,6 +1303,8 @@ function buildHome(){
       </div>
     </div>`;
   });
+
+  h+=`</div>`; // close R32 card
 
   document.getElementById('home-body').innerHTML=h;
 }
