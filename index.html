@@ -1160,24 +1160,24 @@ function setP(i){activeSched=i;buildSB();buildMPN();buildSchedule();}
 // Scores updated as matches complete
 const KO_RESULTS={};
 
-// R32 bracket — real teams resolved from FINAL_QUAL
+// R32 bracket — confirmed fixtures (Yahoo/ESPN/FIFA, Jun 28 2026)
 const R32=[
-  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
-  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},
-  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},
-  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},
-  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"Senegal"}},
-  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"Ecuador"}},
-  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"DR Congo"}},
-  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"Senegal"}},
-  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"Bosnia & Herzegovina"}},
-  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},
-  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"Algeria"}},
-  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},
-  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},
-  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"L3"}},
-  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},
-  {date:"Fri 3 Jul",  match:16, home:{label:"E1"}, away:{label:"F3"}},
+  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},       // South Africa vs Canada
+  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},       // Brazil vs Japan
+  {date:"Mon 29 Jun", match:16, home:{label:"E1"}, away:{label:"Paraguay"}}, // Germany vs Paraguay
+  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},       // Netherlands vs Morocco
+  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},       // Ivory Coast vs Norway
+  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"Sweden"}},   // France vs Sweden
+  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"Ecuador"}},  // Mexico vs Ecuador
+  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"DR Congo"}}, // England vs DR Congo
+  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"Senegal"}},  // Belgium vs Senegal
+  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"Bosnia & Herzegovina"}}, // USA vs Bosnia
+  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},       // Spain vs Austria
+  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"Algeria"}},  // Switzerland vs Algeria
+  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},       // Argentina vs Cabo Verde
+  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},       // Australia vs Egypt
+  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"Ghana"}},    // Colombia vs Ghana
+  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},       // Portugal vs Croatia
 ];
 
 // Map from group+position to team using FINAL_QUAL and MATCHES
