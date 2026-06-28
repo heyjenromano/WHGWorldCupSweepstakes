@@ -890,6 +890,49 @@ let DISC=[
 ];
 const cs=d=>d.y+d.r*2;
 
+// ── KNOCKOUT DATA ────────────────────────────────────────
+const KO_RESULTS={};
+
+const R32=[
+  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
+  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},
+  {date:"Mon 29 Jun", match:16, home:{label:"E1"}, away:{label:"Paraguay"}},
+  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},
+  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},
+  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"Sweden"}},
+  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"Ecuador"}},
+  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"DR Congo"}},
+  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"Senegal"}},
+  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"Bosnia & Herzegovina"}},
+  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},
+  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"Algeria"}},
+  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},
+  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},
+  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"Ghana"}},
+  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},
+];
+
+// Apply knockout round results to QUAL_CACHE
+// Winner → 'through', Loser → 'knocked_out'
+function applyKnockoutStatus(){
+  R32.forEach(m=>{
+    const ko=KO_RESULTS[m.match];
+    if(!ko||!ko.done)return;
+    const home=resolveSlot(m.home.label);
+    const away=resolveSlot(m.away.label);
+    if(!home||!away)return;
+    if(ko.winner){
+      const loser=ko.winner.toLowerCase()===home.toLowerCase()?away:home;
+      QUAL_CACHE[ko.winner]='through';
+      QUAL_CACHE[loser]='knocked_out';
+    } else {
+      // Score ended level — no winner yet (AET/pens pending)
+      QUAL_CACHE[home]='through';
+      QUAL_CACHE[away]='through';
+    }
+  });
+}
+
 // Single shared API fetch — updates both scores and discipline
 let liveFetchInProgress=false;
 async function fetchLiveData(){
@@ -978,10 +1021,10 @@ async function fetchLiveData(){
     if(Object.keys(tally).length>0)DISC=Object.values(tally);
 
     // ── REBUILD ──────────────────────────────────────────
-    // Recompute group positions from updated MATCHES
     Object.keys(QUAL_CACHE).forEach(k=>delete QUAL_CACHE[k]);
     Object.assign(PROG_CACHE, computeGroupPos());
-    Object.assign(QUAL_CACHE, FINAL_QUAL); // always reapply definitive qualification status
+    Object.assign(QUAL_CACHE, FINAL_QUAL);
+    applyKnockoutStatus(); // update based on KO results
     // Update match pill
     const pill=document.getElementById('matches-pill');
     if(pill)pill.textContent=MATCHES.filter(m=>m.done).length+' Matches Played';
@@ -1119,6 +1162,8 @@ const FINAL_QUAL={
 };
 // Override qual() with definitive data now group stage is complete
 Object.assign(QUAL_CACHE, FINAL_QUAL);
+// Apply any already-known knockout results
+applyKnockoutStatus();
 
 
 // ══════════════════════════════════════════════════════
@@ -1135,14 +1180,18 @@ function fD(ds,h,off){
 function posClass(t){
   const q=qual(t);
   if(q==='won')return'tag-won';
+  if(q==='through')return'tag-adv';
   if(q==='qualified')return'tag-adv';
+  if(q==='knocked_out')return'tag-elim';
   if(q==='eliminated')return'tag-elim';
   return'tag-tbd';
 }
 function posLabel(t){
   const q=qual(t);
   if(q==='won')return'🏆 Won Group';
+  if(q==='through')return'⚽ R16';
   if(q==='qualified')return'✅ Qualified';
+  if(q==='knocked_out')return'❌ Knocked Out';
   if(q==='eliminated')return'❌ Eliminated';
   return'TBD';
 }
@@ -1178,30 +1227,6 @@ function setP(i){activeSched=i;buildSB();buildMPN();buildSchedule();}
 // ══════════════════════════════════════════════════════
 //  HOME
 // ══════════════════════════════════════════════════════
-// ── KNOCKOUT DATA ────────────────────────────────────────
-// Scores updated as matches complete
-const KO_RESULTS={};
-
-// R32 bracket — confirmed fixtures (Yahoo/ESPN/FIFA, Jun 28 2026)
-const R32=[
-  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},       // South Africa vs Canada
-  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},       // Brazil vs Japan
-  {date:"Mon 29 Jun", match:16, home:{label:"E1"}, away:{label:"Paraguay"}}, // Germany vs Paraguay
-  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},       // Netherlands vs Morocco
-  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},       // Ivory Coast vs Norway
-  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"Sweden"}},   // France vs Sweden
-  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"Ecuador"}},  // Mexico vs Ecuador
-  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"DR Congo"}}, // England vs DR Congo
-  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"Senegal"}},  // Belgium vs Senegal
-  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"Bosnia & Herzegovina"}}, // USA vs Bosnia
-  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},       // Spain vs Austria
-  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"Algeria"}},  // Switzerland vs Algeria
-  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},       // Argentina vs Cabo Verde
-  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},       // Australia vs Egypt
-  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"Ghana"}},    // Colombia vs Ghana
-  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},       // Portugal vs Croatia
-];
-
 // Map from group+position to team using FINAL_QUAL and MATCHES
 function resolveSlot(label){
   // Direct team name (3rd place qualifiers hardcoded)
