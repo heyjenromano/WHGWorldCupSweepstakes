@@ -273,6 +273,31 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
 
 /* ─── FORM ───────────────────────────────────────────────── */
 
+/* ─── PRIZE TILES ─────────────────────────────────────── */
+.prize-tile{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:border-color .15s;
+}
+.prize-tile:hover{border-color:var(--green);}
+.prize-tile-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)}
+.prize-tile-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px}
+.prize-tile-name{font-size:15px;font-weight:700;color:var(--text1)}
+.prize-tile-sub{font-size:11px;color:var(--text2);text-align:center}
+
+/* ─── HOME MATCH ROWS ─────────────────────────────────── */
+.hm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.hm-row:last-child{border-bottom:none}
+.hm-date{font-size:10px;font-weight:600;color:var(--text3);min-width:36px;text-align:center;letter-spacing:0.04em;text-transform:uppercase;line-height:1.3}
+.hm-teams{flex:1;display:flex;align-items:center;gap:6px}
+.hm-team{display:flex;align-items:center;gap:5px;flex:1}
+.hm-team:last-child{justify-content:flex-end}
+.hm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hm-name{font-size:12px;font-weight:600;color:var(--text1)}
+.hm-winner .hm-name{color:var(--green)}
+.hm-owner{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.hm-score{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--text2);min-width:32px;text-align:center;flex-shrink:0}
+
 /* ─── BRACKET ─────────────────────────────────────────── */
 .brow{
   background:var(--panel);border:1px solid var(--border);
@@ -703,6 +728,7 @@ const FIFA_RANK={
   "Saudi Arabia":61,   // KSA
   "Bosnia & Herzegovina":64, // BIH
   "Cabo Verde":67,     // CPV
+  "Cape Verde":67,     // alias
   "Ghana":73,          // GHA
   "Curaçao":82,        // CUW
   "Haiti":83,          // HAI
@@ -1020,25 +1046,57 @@ const MATCHES=[
   {ds:"Thu 25 Jun",H:20,M:0, g:"E",h:"Curaçao",        a:"Côte d'Ivoire",         score:"0–2",done:true},
   {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Japan",          a:"Sweden",                score:"1–1",done:true},
   {ds:"Thu 25 Jun",H:23,M:0, g:"F",h:"Tunisia",        a:"Netherlands",           score:"1–3",done:true},
-  {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Cabo Verde",     a:"Saudi Arabia",          score:null, done:false},
-  {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Uruguay",        a:"Spain",                 score:null, done:false},
-  {ds:"Fri 26 Jun",H:3, M:0, g:"G",h:"Egypt",          a:"Iran",                  score:null, done:false},
-  {ds:"Fri 26 Jun",H:3, M:0, g:"G",h:"New Zealand",    a:"Belgium",               score:null, done:false},
-  {ds:"Fri 26 Jun",H:19,M:0, g:"I",h:"Norway",         a:"France",                score:null, done:false},
-  {ds:"Fri 26 Jun",H:19,M:0, g:"I",h:"Senegal",        a:"Iraq",                  score:null, done:false},
-  {ds:"Sat 27 Jun",H:2, M:0, g:"J",h:"Algeria",        a:"Austria",               score:null, done:false},
-  {ds:"Sat 27 Jun",H:2, M:0, g:"J",h:"Jordan",         a:"Argentina",             score:null, done:false},
-  {ds:"Sat 27 Jun",H:21,M:0, g:"L",h:"Panama",         a:"England",               score:null, done:false},
-  {ds:"Sat 27 Jun",H:21,M:0, g:"L",h:"Croatia",        a:"Ghana",                 score:null, done:false},
-  {ds:"Sat 27 Jun",H:23,M:30,g:"K",h:"Colombia",       a:"Portugal",              score:null, done:false},
-  {ds:"Sat 27 Jun",H:23,M:30,g:"K",h:"DR Congo",       a:"Uzbekistan",            score:null, done:false},
+  {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Cabo Verde",     a:"Saudi Arabia",          score:"2–0",done:true},
+  {ds:"Fri 26 Jun",H:0, M:0, g:"H",h:"Uruguay",        a:"Spain",                 score:"0–2",done:true},
+  {ds:"Fri 26 Jun",H:3, M:0, g:"G",h:"Egypt",          a:"Iran",                  score:"1–1",done:true},
+  {ds:"Fri 26 Jun",H:3, M:0, g:"G",h:"New Zealand",    a:"Belgium",               score:"1–5",done:true},
+  {ds:"Fri 26 Jun",H:19,M:0, g:"I",h:"Norway",         a:"France",                score:"1–2",done:true},
+  {ds:"Fri 26 Jun",H:19,M:0, g:"I",h:"Senegal",        a:"Iraq",                  score:"5–0",done:true},
+  {ds:"Sat 27 Jun",H:2, M:0, g:"J",h:"Algeria",        a:"Austria",               score:"3–3",done:true},
+  {ds:"Sat 27 Jun",H:2, M:0, g:"J",h:"Jordan",         a:"Argentina",             score:"0–1",done:true},
+  {ds:"Sat 27 Jun",H:21,M:0, g:"L",h:"Panama",         a:"England",               score:"0–3",done:true},
+  {ds:"Sat 27 Jun",H:21,M:0, g:"L",h:"Croatia",        a:"Ghana",                 score:"1–0",done:true},
+  {ds:"Sat 27 Jun",H:23,M:30,g:"K",h:"Colombia",       a:"Portugal",              score:"0–0",done:true},
+  {ds:"Sat 27 Jun",H:23,M:30,g:"K",h:"DR Congo",       a:"Uzbekistan",            score:"3–1",done:true},
 ];
 
 // Compute group positions now that MATCHES is defined
 const QUAL_CACHE={};
 const PROG_CACHE=computeGroupPos();
-const prog=t=>PROG_CACHE[t]||0; // returns 1,2,3,4 or 0 if unknown
-const qual=t=>QUAL_CACHE[t]||'tbd'; // returns won/qualified/eliminated/tbd
+const prog=t=>PROG_CACHE[t]||0;
+const qual=t=>QUAL_CACHE[t]||'tbd';
+
+// ── FINAL GROUP STAGE QUALIFICATION (hardcoded after all 72 matches) ──
+// won = group winner, qualified = R32 qualifier, eliminated = out
+const FINAL_QUAL={
+  // Group A
+  "Mexico":"won","South Africa":"qualified","Korea Republic":"eliminated","Czechia":"eliminated",
+  // Group B
+  "Switzerland":"won","Canada":"qualified","Bosnia & Herzegovina":"qualified","Qatar":"eliminated",
+  // Group C
+  "Brazil":"won","Morocco":"qualified","Scotland":"eliminated","Haiti":"eliminated",
+  // Group D
+  "United States":"won","Australia":"qualified","Paraguay":"qualified","Türkiye":"eliminated",
+  // Group E
+  "Germany":"won","Côte d'Ivoire":"qualified","Ecuador":"qualified","Curaçao":"eliminated",
+  // Group F
+  "Netherlands":"won","Japan":"qualified","Sweden":"qualified","Tunisia":"eliminated",
+  // Group G
+  "Belgium":"won","Egypt":"qualified","Senegal":"qualified","New Zealand":"eliminated",
+  // Group H
+  "Spain":"won","Cabo Verde":"qualified","Uruguay":"eliminated","Saudi Arabia":"eliminated",
+  // Group I
+  "France":"won","Norway":"qualified","Iraq":"eliminated",
+  // Group J
+  "Argentina":"won","Austria":"qualified","Algeria":"qualified","Jordan":"eliminated",
+  // Group K
+  "Colombia":"won","Portugal":"qualified","DR Congo":"qualified","Uzbekistan":"eliminated",
+  // Group L
+  "England":"won","Croatia":"qualified","Ghana":"qualified","Panama":"eliminated",
+};
+// Override qual() with definitive data now group stage is complete
+Object.assign(QUAL_CACHE, FINAL_QUAL);
+
 
 // ══════════════════════════════════════════════════════
 //  HELPERS
@@ -1052,31 +1110,24 @@ function fD(ds,h,off){
   return ds;
 }
 function posClass(t){
-  const q=qual(t), pos=prog(t);
+  const q=qual(t);
   if(q==='won')return'tag-won';
   if(q==='qualified')return'tag-adv';
   if(q==='eliminated')return'tag-elim';
-  if(pos===1||pos===2)return'tag-adv';
-  if(pos===3)return'tag-possible';
-  if(pos===4)return'tag-elim';
   return'tag-tbd';
 }
 function posLabel(t){
-  const q=qual(t), pos=prog(t);
+  const q=qual(t);
   if(q==='won')return'🏆 Won Group';
   if(q==='qualified')return'✅ Qualified';
   if(q==='eliminated')return'❌ Eliminated';
-  if(pos===1)return'1st';
-  if(pos===2)return'2nd';
-  if(pos===3)return'3rd';
-  if(pos===4)return'4th';
-  return'–';
+  return'TBD';
 }
 function ptag(t){
   return `<span class="tag ${posClass(t)}">${posLabel(t)}</span>`;
 }
 function ttag(t,mine){
-  const c=prog(t)?posClass(t):(mine?'tag-mine':'tag-tbd');
+  const c=posClass(t)||(mine?'tag-mine':'tag-tbd');
   return `<span class="tag ${c}">${t}</span>`;
 }
 
@@ -1104,78 +1155,152 @@ function setP(i){activeSched=i;buildSB();buildMPN();buildSchedule();}
 // ══════════════════════════════════════════════════════
 //  HOME
 // ══════════════════════════════════════════════════════
+// ── KNOCKOUT DATA ────────────────────────────────────────
+// Scores updated as matches complete
+const KO_RESULTS={};
+
+// R32 bracket — real teams resolved from FINAL_QUAL
+const R32=[
+  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
+  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},
+  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},
+  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},
+  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"Senegal"}},
+  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"Ecuador"}},
+  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"DR Congo"}},
+  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"Senegal"}},
+  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"Bosnia & Herzegovina"}},
+  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},
+  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"Algeria"}},
+  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},
+  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},
+  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"L3"}},
+  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},
+  {date:"Fri 3 Jul",  match:16, home:{label:"E1"}, away:{label:"F3"}},
+];
+
+// Map from group+position to team using FINAL_QUAL and MATCHES
+function resolveSlot(label){
+  // Direct team name (3rd place qualifiers hardcoded)
+  if(FINAL_QUAL[label]==='qualified'||FINAL_QUAL[label]==='won') return label;
+  // Parse "X1" or "X2"
+  const mx=label.match(/^([A-L])([12])$/);
+  if(!mx) return label; // already a team name or unknown
+  const [,g,posStr]=mx;
+  const posNum=parseInt(posStr);
+  // Find team in group g at position posNum
+  const match=Object.entries(PROG_CACHE).find(([t,p])=>{
+    const inGroup=MATCHES.some(m=>m.g===g&&(m.h===t||m.a===t));
+    return inGroup&&p===posNum;
+  });
+  return match?match[0]:null;
+}
+
+function ownerOf(team){
+  if(!team)return null;
+  return PARTS.find(p=>p.teams.some(t=>t.toLowerCase()===team.toLowerCase()))||null;
+}
+
 function buildHome(){
-  const top={},bottom={};
-  PARTS.forEach(p=>p.teams.forEach(t=>{
-    const pos=prog(t);
-    if(pos===1||pos===2){if(!top[p.name])top[p.name]=[];top[p.name].push(t);}
-    if(pos===3){if(!bottom[p.name])bottom[p.name]=[];bottom[p.name].push(t);}
-  }));
-
-  // Dark horse: highest-ranked (worst FIFA rank number) team currently in 1st or 2nd
+  // Dark horse winner: highest FIFA rank (worst number) among qualified teams
   let dhT=null,dhR=-1,dhO=null,dhPi=0;
-  Object.entries(top).forEach(([o,ts])=>ts.forEach(t=>{
-    const r=FIFA_RANK[t]||99;
-    if(r>dhR){dhR=r;dhT=t;dhO=o;dhPi=PARTS.findIndex(p=>p.name===o);}
+  PARTS.forEach((p,pi)=>p.teams.forEach(t=>{
+    const q=qual(t);
+    if(q==='won'||q==='qualified'){
+      const r=FIFA_RANK[t]||0;
+      if(r>dhR){dhR=r;dhT=t;dhO=p.name;dhPi=pi;}
+    }
   }));
 
+  // Discipline leader
   const dm={};
   DISC.forEach(d=>PARTS.forEach((p,pi)=>{
     if(p.teams.map(x=>x.toLowerCase()).includes(d.team.toLowerCase())){
-      if(!dm[p.name])dm[p.name]={s:0,pi,cards:[]};
-      dm[p.name].s+=cs(d);dm[p.name].cards.push(d);
+      if(!dm[p.name])dm[p.name]={s:0,pi,r:0,cards:[]};
+      dm[p.name].s+=cs(d);dm[p.name].r+=d.r;dm[p.name].cards.push(d);
     }
   }));
-  const dl=Object.entries(dm).sort((a,b)=>b[1].s-a[1].s)[0];
+  const dl=Object.entries(dm).sort((a,b)=>b[1].s-a[1].s||b[1].r-a[1].r)[0];
+
+  // Main prize: rank by teams qualified
+  const mainRows=PARTS.map((p,pi)=>{
+    const adv=p.teams.filter(t=>qual(t)==='won'||qual(t)==='qualified');
+    return{name:p.name,pi,adv,count:adv.length};
+  }).sort((a,b)=>b.count-a.count);
 
   let h='';
 
-  // Progressing (1st or 2nd)
-  h+=`<div class="sec"><span class="sec-lbl">Teams currently 1st or 2nd</span><span class="sec-prize">£45 · £25 · £20 at stake</span></div>`;
-  const ae=Object.entries(top);
-  if(!ae.length)h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No teams have progressed yet — check back after matchday 1 is complete.</p>`;
-  else ae.forEach(([o,ts])=>{
-    const p=PARTS.find(x=>x.name===o);
-    const pi=PARTS.findIndex(x=>x.name===o);
-    h+=`<div class="pcard" onclick="showPlayer(${pi})" style="cursor:pointer"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
-    <div><div class="pcard-name">${o}</div><div class="tag-row">${ts.map(t=>ttag(t,false)).join('')}</div></div></div>`;
-  });
+  // ── PRIZE TILES ──────────────────────────────────────
+  h+=`<div class="sec"><span class="sec-lbl">Prize standings</span></div>`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">`;
 
-  // Bottom (4th)
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Teams currently 3rd</span></div>`;
-  const ee=Object.entries(bottom);
-  if(!ee.length)h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No teams in third place yet.</p>`;
-  else ee.forEach(([o,ts])=>{
-    const p=PARTS.find(x=>x.name===o);
-    const pi=PARTS.findIndex(x=>x.name===o);
-    h+=`<div class="pcard" onclick="showPlayer(${pi})" style="cursor:pointer"><div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${o.slice(0,2).toUpperCase()}</div>
-    <div><div class="pcard-name">${o}</div><div class="tag-row">${ts.map(t=>ttag(t,false)).join('')}</div></div></div>`;
-  });
+  // Main prize tile
+  const mainLeader=mainRows[0];
+  const mainP=PARTS[mainLeader.pi];
+  h+=`<div class="prize-tile" onclick="showPlayer(${mainLeader.pi})" style="cursor:pointer;border-top:3px solid var(--green)">
+    <div class="prize-tile-label">🏆 Main Prize</div>
+    <div class="prize-tile-av" style="background:${mainP.av.bg};color:${mainP.av.c}">${mainLeader.name.slice(0,2).toUpperCase()}</div>
+    <div class="prize-tile-name">${mainLeader.name}</div>
+    <div class="prize-tile-sub">${mainLeader.count} teams through</div>
+  </div>`;
 
-  // Dark horse snapshot
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Dark horse leader</span><span class="sec-prize">£15 prize</span></div>`;
+  // Dark horse tile
   if(dhT){
-    const p=PARTS[dhPi];
-    h+=`<div class="hbox">
-      <div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${dhO.slice(0,2).toUpperCase()}</div>
-      <div><div class="hbox-title">${dhO} &nbsp;<span class="tag tag-dark">${dhT}</span></div>
-      <div class="hbox-sub">FIFA rank #${dhR} · currently 1st or 2nd in their group · ${MATCHES.filter(m=>m.done).length} matches played so far</div></div>
+    const dhP=PARTS[dhPi];
+    h+=`<div class="prize-tile" onclick="showPlayer(${dhPi})" style="cursor:pointer;border-top:3px solid #f59e0b">
+      <div class="prize-tile-label">🐴 Dark Horse</div>
+      <div class="prize-tile-av" style="background:${dhP.av.bg};color:${dhP.av.c}">${dhO.slice(0,2).toUpperCase()}</div>
+      <div class="prize-tile-name">${dhO}</div>
+      <div class="prize-tile-sub">${dhT} · FIFA #${dhR}</div>
     </div>`;
-  } else {
-    h+=`<p style="color:var(--text3);font-size:13px;padding:8px 0">No progressing teams yet.</p>`;
   }
 
-  // Discipline snapshot
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Discipline disaster leader</span><span class="sec-prize">£15 prize</span></div>`;
+  // Discipline tile
   if(dl){
-    const [ln,ld]=dl;const p=PARTS[ld.pi];
-    const detail=ld.cards.map(d=>`${d.team}: ${d.y}<span class="ycard"></span> ${d.r}<span class="rcard"></span>`).join(' · ');
-    h+=`<div class="hbox red">
-      <div class="pcard-av" style="background:${p.av.bg};color:${p.av.c}">${ln.slice(0,2).toUpperCase()}</div>
-      <div><div class="hbox-title">${ln} &nbsp;<span style="font-size:13px;color:var(--red);font-weight:600">${ld.s} pts</span></div>
-      <div class="hbox-sub">${detail}</div></div>
+    const [dln,dld]=dl;const dlP=PARTS[dld.pi];
+    h+=`<div class="prize-tile" onclick="showPage('disc')" style="cursor:pointer;border-top:3px solid #ef4444">
+      <div class="prize-tile-label">🟥 Discipline</div>
+      <div class="prize-tile-av" style="background:${dlP.av.bg};color:${dlP.av.c}">${dln.slice(0,2).toUpperCase()}</div>
+      <div class="prize-tile-name">${dln}</div>
+      <div class="prize-tile-sub">${dld.s} card pts (live)</div>
     </div>`;
   }
+
+  h+=`</div>`;
+
+  // ── ROUND OF 32 BRACKET ──────────────────────────────
+  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Round of 32</span><span class="sec-prize">28 Jun – 3 Jul</span></div>`;
+
+  R32.forEach(m=>{
+    const homeTeam=resolveSlot(m.home.label);
+    const awayTeam=resolveSlot(m.away.label);
+    const homeOwner=ownerOf(homeTeam);
+    const awayOwner=ownerOf(awayTeam);
+
+    // Find if there's a knockout result for this match
+    const ko=KO_RESULTS&&KO_RESULTS[m.match];
+    const homeBg=homeOwner?homeOwner.av.bg:'var(--border2)';
+    const homeC=homeOwner?homeOwner.av.c:'var(--text3)';
+    const awayBg=awayOwner?awayOwner.av.bg:'var(--border2)';
+    const awayC=awayOwner?awayOwner.av.c:'var(--text3)';
+
+    h+=`<div class="hm-row">
+      <div class="hm-date">${m.date.replace(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat) /,'')}</div>
+      <div class="hm-teams">
+        <div class="hm-team${ko&&ko.winner===homeTeam?' hm-winner':''}">
+          <span class="hm-dot" style="background:${homeBg}"></span>
+          <span class="hm-name">${homeTeam||m.home.label}</span>
+          ${homeOwner?`<span class="hm-owner" style="background:${homeBg};color:${homeC}">${homeOwner.name.slice(0,2).toUpperCase()}</span>`:''}
+        </div>
+        <span class="hm-score">${ko?ko.score:'vs'}</span>
+        <div class="hm-team${ko&&ko.winner===awayTeam?' hm-winner':''}">
+          ${awayOwner?`<span class="hm-owner" style="background:${awayBg};color:${awayC}">${awayOwner.name.slice(0,2).toUpperCase()}</span>`:''}
+          <span class="hm-name">${awayTeam||m.away.label}</span>
+          <span class="hm-dot" style="background:${awayBg}"></span>
+        </div>
+      </div>
+    </div>`;
+  });
 
   document.getElementById('home-body').innerHTML=h;
 }
@@ -1225,12 +1350,30 @@ function buildSchedule(){
 // ══════════════════════════════════════════════════════
 function buildDark(){
   const all=[];
-  PARTS.forEach((p,pi)=>p.teams.forEach(t=>all.push({t,owner:p.name,pi,rank:FIFA_RANK[t]||99,st:prog(t)})));
+  PARTS.forEach((p,pi)=>p.teams.forEach(t=>all.push({t,owner:p.name,pi,rank:FIFA_RANK[t]||99,q:qual(t)})));
   all.sort((a,b)=>b.rank-a.rank);
-  const firstAdv=all.findIndex(x=>x.st===1||x.st===2);
+  const firstAdv=all.findIndex(x=>x.q==='won'||x.q==='qualified');
 
-  let h=`<p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7">
-    All sweepstakes teams listed from lowest FIFA ranking to highest. The <strong>first progressing team</strong> from the bottom of this list wins the £15 dark horse prize for their owner.</p>`;
+  // Winner = first qualifying team from the bottom (highest FIFA rank number)
+  const winner=firstAdv>=0?all[firstAdv]:null;
+  const winnerOwner=winner?PARTS[winner.pi]:null;
+
+  let h='';
+
+  if(winner){
+    h+=`<div class="winner-banner" style="background:linear-gradient(135deg,var(--navy),#1a3a5c);border:1px solid var(--green);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+      <div style="font-size:32px">🐴</div>
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:4px">Dark Horse Winner · £15</div>
+        <div style="font-size:18px;font-weight:700;color:var(--white)">${winner.owner}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:2px">${winner.t} · FIFA #${winner.rank}</div>
+      </div>
+      <div class="pcard-av" style="background:${winnerOwner.av.bg};color:${winnerOwner.av.c};margin-left:auto;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px">${winner.owner.slice(0,2).toUpperCase()}</div>
+    </div>`;
+  }
+
+  h+=`<p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7">
+    All sweepstakes teams listed from lowest FIFA ranking to highest. The <strong>first qualified team</strong> from the bottom of this list wins the £15 dark horse prize.</p>`;
 
   h+=`<div class="sec"><span class="sec-lbl">All teams · worst → best ranked</span></div>`;
   all.forEach((item,i)=>{
@@ -1241,7 +1384,7 @@ function buildDark(){
       <div class="drow-team">${item.t} <span style="font-size:11px;font-weight:400;color:var(--text3)">FIFA #${item.rank}</span></div>
       <div class="drow-owner">${item.owner}</div>
       ${ptag(item.t)}
-      ${isL?`<span class="tag tag-dark">Leader</span>`:''}
+      ${isL?`<span class="tag tag-dark">Winner</span>`:''}
     </div>`;
   });
 
@@ -1445,48 +1588,8 @@ function showPlayer(pi){
 //  BRACKET
 // ══════════════════════════════════════════════════════
 
-// Fixed Round of 32 bracket (FIFA pre-determined structure)
-// slot: label shown when team unknown, home/away: group position descriptors
-const R32=[
-  {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
-  {date:"Mon 29 Jun", match:2,  home:{label:"C1"}, away:{label:"F2"}},
-  {date:"Mon 29 Jun", match:3,  home:{label:"F1"}, away:{label:"C2"}},
-  {date:"Tue 30 Jun", match:4,  home:{label:"E2"}, away:{label:"I2"}},
-  {date:"Tue 30 Jun", match:5,  home:{label:"I1"}, away:{label:"3rd C/D/F/G/H"}},
-  {date:"Tue 30 Jun", match:6,  home:{label:"A1"}, away:{label:"3rd C/E/F/H/I"}},
-  {date:"Wed 1 Jul",  match:7,  home:{label:"L1"}, away:{label:"3rd E/H/I/J/K"}},
-  {date:"Wed 1 Jul",  match:8,  home:{label:"G1"}, away:{label:"3rd A/E/H/I/J"}},
-  {date:"Wed 1 Jul",  match:9,  home:{label:"D1"}, away:{label:"3rd B/E/F/I/J"}},
-  {date:"Thu 2 Jul",  match:10, home:{label:"H1"}, away:{label:"J2"}},
-  {date:"Thu 2 Jul",  match:11, home:{label:"B1"}, away:{label:"3rd E/F/G/I/J"}},
-  {date:"Thu 2 Jul",  match:12, home:{label:"J1"}, away:{label:"H2"}},
-  {date:"Fri 3 Jul",  match:13, home:{label:"D2"}, away:{label:"G2"}},
-  {date:"Fri 3 Jul",  match:14, home:{label:"K1"}, away:{label:"3rd D/E/I/J/L"}},
-  {date:"Fri 3 Jul",  match:15, home:{label:"K2"}, away:{label:"L2"}},
-  {date:"Fri 3 Jul",  match:16, home:{label:"E1"}, away:{label:"3rd A/B/C/D/F"}},
-];
-
-// Map group position labels to actual teams from PROG_CACHE
-function resolveSlot(label){
-  // Parse "X1" or "X2" labels
-  const m=label.match(/^([A-L])([12])$/);
-  if(!m) return null; // 3rd place slots — TBD until group stage ends
-  const [,g,pos]=m;
-  const posNum=parseInt(pos);
-  // Find team in that group position
-  const team=Object.entries(PROG_CACHE).find(([t,p])=>{
-    // Check team is in group g
-    const inGroup=MATCHES.some(mx=>mx.g===g&&(mx.h===t||mx.a===t));
-    return inGroup&&p===posNum;
-  });
-  return team?team[0]:null;
-}
-
-function ownerOf(team){
-  if(!team)return null;
-  return PARTS.find(p=>p.teams.some(t=>t.toLowerCase()===team.toLowerCase()))||null;
-}
-
+// Knockout match results (updated as matches complete)
+// key = match number from R32 array, value = {score, winner}
 function buildBracket(){
   // Group R32 matches by date
   const byDate={};
