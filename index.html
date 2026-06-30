@@ -865,7 +865,11 @@ const ESPN_NAME_MAP={
   "Austria":"Austria","Jordan":"Jordan","Portugal":"Portugal","Congo DR":"DR Congo",
   "Uzbekistan":"Uzbekistan","Colombia":"Colombia","England":"England","Croatia":"Croatia",
   "Ghana":"Ghana","Panama":"Panama","Korea Republic":"Korea Republic",
-  "Ivory Coast":"Côte d'Ivoire",
+  "Ivory Coast":"Côte d'Ivoire","Cote d'Ivoire":"Côte d'Ivoire",
+  "Bosnia-Herzegovina":"Bosnia & Herzegovina","Bosnia Herzegovina":"Bosnia & Herzegovina",
+  "DR Congo":"DR Congo","Congo DR":"DR Congo","Congo":"DR Congo",
+  "Cape Verde":"Cabo Verde","Curacao":"Curaçao",
+  "Turkey":"Türkiye","USA":"United States",
 };
 
 // Fallback static DISC (used until live data loads)
@@ -890,8 +894,56 @@ let DISC=[
 ];
 const cs=d=>d.y+d.r*2;
 
-// ── KNOCKOUT DATA ────────────────────────────────────────
-const KO_RESULTS={};
+// Static R32 team lookup — used for knockout matching in fetch
+// Built from confirmed final group standings
+const R32_TEAMS={
+  'A1':'Mexico','A2':'South Africa',
+  'B1':'Switzerland','B2':'Canada',
+  'C1':'Brazil','C2':'Morocco',
+  'D1':'United States','D2':'Australia',
+  'E1':'Germany','E2':'Côte d\'Ivoire',
+  'F1':'Netherlands','F2':'Japan',
+  'G1':'Belgium','G2':'Egypt',
+  'H1':'Spain','H2':'Cabo Verde',
+  'I1':'France','I2':'Norway',
+  'J1':'Argentina','J2':'Austria',
+  'K1':'Colombia','K2':'Portugal',
+  'L1':'England','L2':'Croatia',
+  // 3rd place qualifiers
+  'Paraguay':'Paraguay','Sweden':'Sweden','Ecuador':'Ecuador',
+  'DR Congo':'DR Congo','Senegal':'Senegal',
+  'Bosnia & Herzegovina':'Bosnia & Herzegovina',
+  'Algeria':'Algeria','Ghana':'Ghana',
+};
+
+function resolveSlot(label){
+  if(R32_TEAMS[label]) return R32_TEAMS[label];
+  if(FINAL_QUAL[label]==='qualified'||FINAL_QUAL[label]==='won') return label;
+  const mx=label.match(/^([A-L])([12])$/);
+  if(!mx) return label;
+  const [,g,posStr]=mx;
+  const posNum=parseInt(posStr);
+  const match=Object.entries(PROG_CACHE).find(([t,p])=>{
+    const inGroup=MATCHES.some(m=>m.g===g&&(m.h===t||m.a===t));
+    return inGroup&&p===posNum;
+  });
+  return match?match[0]:null;
+}
+
+function ownerOf(team){
+  if(!team)return null;
+  return PARTS.find(p=>p.teams.some(t=>t.toLowerCase()===team.toLowerCase()))||null;
+}
+
+// Match numbers with manually-confirmed results that should never be
+// overwritten by the live fetch (used for penalty shootouts where the
+// live API's winner flag has proven unreliable)
+const KO_LOCKED=new Set([3,16]);
+
+const KO_RESULTS={
+  16: {score:"0–0 (4–2 pens)", winner:"Paraguay", done:true}, // Germany vs Paraguay
+  3:  {score:"1–1 (5–4 pens)", winner:"Morocco",  done:true}, // Netherlands vs Morocco
+};
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -961,6 +1013,11 @@ async function fetchLiveData(){
       const inProgress=comp.status?.type?.state==='in';
       const homeScore=home.score;
       const awayScore=away.score;
+      const homeWon=home.winner===true;
+      const awayWon=away.winner===true;
+      // Shootout score, if present (e.g. "5" pens)
+      const homeShootout=home.shootoutScore;
+      const awayShootout=away.shootoutScore;
 
       // Find matching entry in MATCHES by team names (group stage)
       const match=MATCHES.find(m=>
@@ -987,14 +1044,31 @@ async function fetchLiveData(){
           (h.toLowerCase()===awayName.toLowerCase()&&a.toLowerCase()===homeName.toLowerCase())
         );
       });
-      if(r32){
+      if(r32&&!KO_LOCKED.has(r32.match)){
         const h=resolveSlot(r32.home.label);
         const isFlipped=h&&h.toLowerCase()===awayName.toLowerCase();
         const hs=isFlipped?awayScore:homeScore;
         const as=isFlipped?homeScore:awayScore;
+        const hShoot=isFlipped?awayShootout:homeShootout;
+        const aShoot=isFlipped?homeShootout:awayShootout;
+        const hWon=isFlipped?awayWon:homeWon;
+        const aWon=isFlipped?homeWon:awayWon;
+
         if(completed){
-          const winner=parseInt(hs)>parseInt(as)?homeName:parseInt(as)>parseInt(hs)?awayName:null;
-          KO_RESULTS[r32.match]={score:`${hs}–${as}`,winner,done:true};
+          // Determine winner: prefer ESPN's explicit winner flag (handles AET/penalties),
+          // fall back to score comparison only if neither flag is set
+          let winner=null;
+          if(hWon)winner=isFlipped?awayName:homeName;
+          else if(aWon)winner=isFlipped?homeName:awayName;
+          else if(parseInt(hs)!==parseInt(as)){
+            winner=parseInt(hs)>parseInt(as)?(isFlipped?awayName:homeName):(isFlipped?homeName:awayName);
+          }
+          // Build score display, appending penalty shootout score if present
+          let scoreDisplay=`${hs}–${as}`;
+          if((hShoot!=null&&aShoot!=null)&&hShoot!==''&&aShoot!==''){
+            scoreDisplay+=` (${hShoot}–${aShoot} pens)`;
+          }
+          KO_RESULTS[r32.match]={score:scoreDisplay,winner,done:true};
         } else if(inProgress){
           KO_RESULTS[r32.match]={score:`${hs}–${as}*`,winner:null,done:false};
         }
@@ -1227,27 +1301,6 @@ function setP(i){activeSched=i;buildSB();buildMPN();buildSchedule();}
 // ══════════════════════════════════════════════════════
 //  HOME
 // ══════════════════════════════════════════════════════
-// Map from group+position to team using FINAL_QUAL and MATCHES
-function resolveSlot(label){
-  // Direct team name (3rd place qualifiers hardcoded)
-  if(FINAL_QUAL[label]==='qualified'||FINAL_QUAL[label]==='won') return label;
-  // Parse "X1" or "X2"
-  const mx=label.match(/^([A-L])([12])$/);
-  if(!mx) return label; // already a team name or unknown
-  const [,g,posStr]=mx;
-  const posNum=parseInt(posStr);
-  // Find team in group g at position posNum
-  const match=Object.entries(PROG_CACHE).find(([t,p])=>{
-    const inGroup=MATCHES.some(m=>m.g===g&&(m.h===t||m.a===t));
-    return inGroup&&p===posNum;
-  });
-  return match?match[0]:null;
-}
-
-function ownerOf(team){
-  if(!team)return null;
-  return PARTS.find(p=>p.teams.some(t=>t.toLowerCase()===team.toLowerCase()))||null;
-}
 
 function buildHome(){
   // Dark horse winner: highest FIFA rank (worst number) among qualified teams
