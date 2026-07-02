@@ -291,7 +291,7 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
 .hm-date{font-size:10px;font-weight:600;color:var(--text2);min-width:38px;text-align:center;letter-spacing:0.04em;text-transform:uppercase;line-height:1.3}
 .hm-teams{flex:1;display:flex;align-items:center;gap:6px}
 .hm-team{display:flex;align-items:center;gap:5px;flex:1}
-.hm-team:last-child{justify-content:flex-end}
+.hm-team:last-child,.hm-team-right{justify-content:flex-end}
 .hm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
 .hm-name{font-size:12px;font-weight:600;color:var(--text1)}
 .hm-winner .hm-name{color:var(--green);font-weight:700}
@@ -938,12 +938,35 @@ function ownerOf(team){
 // Match numbers with manually-confirmed results that should never be
 // overwritten by the live fetch (used for penalty shootouts where the
 // live API's winner flag has proven unreliable)
-const KO_LOCKED=new Set([3,16]);
+const KO_LOCKED=new Set([3,8,16]);
 
 const KO_RESULTS={
-  16: {score:"0–0 (4–2 pens)", winner:"Paraguay", done:true}, // Germany vs Paraguay
-  3:  {score:"1–1 (5–4 pens)", winner:"Morocco",  done:true}, // Netherlands vs Morocco
+  // ── ROUND OF 32 ──────────────────────────────────────
+  1:  {score:"0–1",           winner:"Canada",   done:true},  // South Africa vs Canada
+  2:  {score:"2–1",           winner:"Brazil",   done:true},  // Brazil vs Japan
+  16: {score:"1–1 (4–3 pens)",winner:"Paraguay", done:true},  // Germany vs Paraguay
+  3:  {score:"1–1 (3–2 pens)",winner:"Morocco",  done:true},  // Netherlands vs Morocco
+  4:  {score:"2–1",           winner:"Norway",   done:true},  // Norway vs Côte d'Ivoire
+  5:  {score:"3–0",           winner:"France",   done:true},  // France vs Sweden
+  6:  {score:"2–0",           winner:"Mexico",   done:true},  // Mexico vs Ecuador
+  7:  {score:"2–1",           winner:"England",  done:true},  // England vs DR Congo
+  8:  {score:"3–2 (AET)",     winner:"Belgium",  done:true},  // Belgium vs Senegal
+  9:  {score:"2–0",           winner:"United States", done:true}, // USA vs Bosnia
 };
+
+// ── ROUND OF 16 ──────────────────────────────────────
+const R16=[
+  {date:"Fri 4 Jul",  match:1,  home:"Canada",         away:"Morocco"},
+  {date:"Fri 4 Jul",  match:2,  home:"Paraguay",        away:"France"},
+  {date:"Sat 5 Jul",  match:3,  home:"Brazil",          away:"Norway"},
+  {date:"Sat 5 Jul",  match:4,  home:"Mexico",          away:"England"},
+  {date:"Sun 6 Jul",  match:5,  home:null,              away:null, homeTbd:"Winner R32 M15", awayTbd:"Winner R32 M10"}, // Portugal/Croatia vs Spain/Austria
+  {date:"Sun 6 Jul",  match:6,  home:"United States",   away:"Belgium"},
+  {date:"Mon 7 Jul",  match:7,  home:null,              away:null, homeTbd:"Winner R32 M12", awayTbd:"Winner R32 M13"}, // Argentina/Cabo Verde vs Australia/Egypt
+  {date:"Mon 7 Jul",  match:8,  home:null,              away:null, homeTbd:"Winner R32 M11", awayTbd:"Winner R32 M14"}, // Switzerland/Algeria vs Colombia/Ghana
+];
+
+const R16_RESULTS={};
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -967,6 +990,7 @@ const R32=[
 // Apply knockout round results to QUAL_CACHE
 // Winner → 'through', Loser → 'knocked_out'
 function applyKnockoutStatus(){
+  // R32
   R32.forEach(m=>{
     const ko=KO_RESULTS[m.match];
     if(!ko||!ko.done)return;
@@ -977,10 +1001,18 @@ function applyKnockoutStatus(){
       const loser=ko.winner.toLowerCase()===home.toLowerCase()?away:home;
       QUAL_CACHE[ko.winner]='through';
       QUAL_CACHE[loser]='knocked_out';
-    } else {
-      // Score ended level — no winner yet (AET/pens pending)
-      QUAL_CACHE[home]='through';
-      QUAL_CACHE[away]='through';
+    }
+  });
+  // R16
+  R16.forEach(m=>{
+    const ko=R16_RESULTS[m.match];
+    if(!ko||!ko.done)return;
+    const home=m.home||m.homeTbd;
+    const away=m.away||m.awayTbd;
+    if(ko.winner){
+      const loser=ko.winner===home?away:home;
+      QUAL_CACHE[ko.winner]='r16_through';
+      if(loser&&FINAL_QUAL[loser])QUAL_CACHE[loser]='knocked_out';
     }
   });
 }
@@ -1254,15 +1286,15 @@ function fD(ds,h,off){
 function posClass(t){
   const q=qual(t);
   if(q==='won')return'tag-won';
-  if(q==='through')return'tag-adv';
+  if(q==='r16_through'||q==='through')return'tag-adv';
   if(q==='qualified')return'tag-adv';
-  if(q==='knocked_out')return'tag-elim';
-  if(q==='eliminated')return'tag-elim';
+  if(q==='knocked_out'||q==='eliminated')return'tag-elim';
   return'tag-tbd';
 }
 function posLabel(t){
   const q=qual(t);
   if(q==='won')return'🏆 Won Group';
+  if(q==='r16_through')return'⚽ QF';
   if(q==='through')return'⚽ R16';
   if(q==='qualified')return'✅ Qualified';
   if(q==='knocked_out')return'❌ Knocked Out';
@@ -1323,36 +1355,21 @@ function buildHome(){
   }));
   const dl=Object.entries(dm).sort((a,b)=>b[1].s-a[1].s||b[1].r-a[1].r)[0];
 
-  // Main prize: rank by teams qualified
-  const mainRows=PARTS.map((p,pi)=>{
-    const adv=p.teams.filter(t=>qual(t)==='won'||qual(t)==='qualified');
-    return{name:p.name,pi,adv,count:adv.length};
-  }).sort((a,b)=>b.count-a.count);
-
   let h='';
 
   // ── PRIZE TILES ──────────────────────────────────────
   h+=`<div class="sec"><span class="sec-lbl">Prize standings</span></div>`;
   h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">`;
 
-  // Main prize tile
-  const mainLeader=mainRows[0];
-  const mainP=PARTS[mainLeader.pi];
-  h+=`<div class="prize-tile" onclick="showPlayer(${mainLeader.pi})" style="cursor:pointer;border-top:3px solid var(--green)">
-    <div class="prize-tile-label">🏆 Main Prize</div>
-    <div class="prize-tile-av" style="background:${mainP.av.bg};color:${mainP.av.c}">${mainLeader.name.slice(0,2).toUpperCase()}</div>
-    <div class="prize-tile-name">${mainLeader.name}</div>
-    <div class="prize-tile-sub">${mainLeader.count} teams through</div>
-  </div>`;
-
-  // Dark horse tile
+  // Dark horse tile — confirmed winner, gold border
   if(dhT){
     const dhP=PARTS[dhPi];
-    h+=`<div class="prize-tile" onclick="showPlayer(${dhPi})" style="cursor:pointer;border-top:3px solid #f59e0b">
-      <div class="prize-tile-label">🐴 Dark Horse</div>
+    h+=`<div class="prize-tile" onclick="showPlayer(${dhPi})" style="cursor:pointer;border:2px solid #f59e0b;box-shadow:0 0 12px rgba(245,158,11,0.3);border-top:4px solid #f59e0b">
+      <div class="prize-tile-label" style="color:#b45309">🐴 Dark Horse · £15</div>
       <div class="prize-tile-av" style="background:${dhP.av.bg};color:${dhP.av.c}">${dhO.slice(0,2).toUpperCase()}</div>
       <div class="prize-tile-name">${dhO}</div>
       <div class="prize-tile-sub">${dhT} · FIFA #${dhR}</div>
+      <div style="font-size:10px;font-weight:700;color:#b45309;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">🏆 Winner</div>
     </div>`;
   }
 
@@ -1360,7 +1377,7 @@ function buildHome(){
   if(dl){
     const [dln,dld]=dl;const dlP=PARTS[dld.pi];
     h+=`<div class="prize-tile" onclick="showPage('disc')" style="cursor:pointer;border-top:3px solid #ef4444">
-      <div class="prize-tile-label">🟥 Discipline</div>
+      <div class="prize-tile-label">🟥 Discipline · £15</div>
       <div class="prize-tile-av" style="background:${dlP.av.bg};color:${dlP.av.c}">${dln.slice(0,2).toUpperCase()}</div>
       <div class="prize-tile-name">${dln}</div>
       <div class="prize-tile-sub">${dld.s} card pts (live)</div>
@@ -1575,9 +1592,6 @@ function buildTeams(){
           <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px">${total} teams &nbsp;·&nbsp; Best: #${bestRank} ${best}</div>
         </div>
         <div style="margin-left:auto;text-align:right;z-index:1">
-          ${advCount?`<div style="font-size:11px;font-weight:600;color:var(--green)">${advCount} progressing</div>`:''}
-          ${thirdCount?`<div style="font-size:11px;font-weight:600;color:var(--possible-c)">${thirdCount} in 3rd</div>`:''}
-          ${elimCount?`<div style="font-size:11px;font-weight:600;color:#e8231e">${elimCount} in 4th</div>`:''}
           ${!advCount&&!thirdCount&&!elimCount?`<div style="font-size:11px;color:rgba(255,255,255,0.35)">TBD</div>`:''}
         </div>
       </div>
@@ -1694,49 +1708,75 @@ function showPlayer(pi){
 
 // Knockout match results (updated as matches complete)
 // key = match number from R32 array, value = {score, winner}
-function buildBracket(){
-  // Group R32 matches by date
-  const byDate={};
-  R32.forEach(m=>{
-    if(!byDate[m.date])byDate[m.date]=[];
-    byDate[m.date].push(m);
-  });
+function bracketRow(homeTeam, awayTeam, score, stage){
+  const homeOwner=ownerOf(homeTeam);
+  const awayOwner=ownerOf(awayTeam);
+  const ko=score||null;
+  const homeBg=homeOwner?homeOwner.av.bg:'var(--border2)';
+  const homeC=homeOwner?homeOwner.av.c:'var(--text3)';
+  const awayBg=awayOwner?awayOwner.av.bg:'var(--border2)';
+  const awayC=awayOwner?awayOwner.av.c:'var(--text3)';
+  const homeWon=ko&&ko.winner&&ko.winner.toLowerCase()===(homeTeam||'').toLowerCase();
+  const awayWon=ko&&ko.winner&&ko.winner.toLowerCase()===(awayTeam||'').toLowerCase();
+  const scoreDisplay=ko?ko.score:'vs';
 
-  let h='';
-  Object.entries(byDate).forEach(([date,matches])=>{
-    h+=`<div class="sec"><span class="sec-lbl">${date}</span></div>`;
-    matches.forEach(m=>{
-      const homeTeam=resolveSlot(m.home.label);
-      const awayTeam=resolveSlot(m.away.label);
-      const homeOwner=ownerOf(homeTeam);
-      const awayOwner=ownerOf(awayTeam);
-
-      h+=`<div class="brow">
-        <div class="brow-match">R32 · Match ${m.match}</div>
-        <div class="brow-teams">
-          ${bracketTeamEl(homeTeam, homeOwner, m.home.label)}
-          <span class="brow-vs">vs</span>
-          ${bracketTeamEl(awayTeam, awayOwner, m.away.label)}
-        </div>
-      </div>`;
-    });
-  });
-
-  document.getElementById('bracket-body').innerHTML=h;
+  return `<div class="hm-row">
+    <div class="hm-teams">
+      <div class="hm-team${homeWon?' hm-winner':''}">
+        <span class="hm-dot" style="background:${homeBg}"></span>
+        <span class="hm-name">${homeTeam||'TBD'}</span>
+        ${homeOwner?`<span class="hm-owner" style="background:${homeBg};color:${homeC}">${homeOwner.name.slice(0,2).toUpperCase()}</span>`:''}
+      </div>
+      <span class="hm-score">${scoreDisplay}</span>
+      <div class="hm-team hm-team-right${awayWon?' hm-winner':''}">
+        ${awayOwner?`<span class="hm-owner" style="background:${awayBg};color:${awayC}">${awayOwner.name.slice(0,2).toUpperCase()}</span>`:''}
+        <span class="hm-name">${awayTeam||'TBD'}</span>
+        <span class="hm-dot" style="background:${awayBg}"></span>
+      </div>
+    </div>
+  </div>`;
 }
 
-function bracketTeamEl(team, owner, fallback){
-  if(!team){
-    return `<div class="bteam bteam-tbd"><span class="bteam-name">${fallback}</span><span class="bteam-owner">TBD</span></div>`;
-  }
-  const bg=owner?owner.av.bg:'var(--panel2)';
-  const c=owner?owner.av.c:'var(--text2)';
-  const ownerName=owner?owner.name:'–';
-  const q=qual(team);
-  return `<div class="bteam" style="border-left:3px solid ${bg}">
-    <span class="bteam-name">${team}</span>
-    <span class="bteam-owner" style="background:${bg};color:${c}">${ownerName}</span>
-  </div>`;
+function buildBracket(){
+  let h='';
+
+  // ── ROUND OF 32 ──────────────────────────────────────
+  h+=`<div class="sec"><span class="sec-lbl">Round of 32</span><span class="sec-prize">28 Jun – 3 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin-bottom:20px">`;
+  let lastDate='';
+  R32.forEach(m=>{
+    const homeTeam=resolveSlot(m.home.label);
+    const awayTeam=resolveSlot(m.away.label);
+    const ko=KO_RESULTS[m.match];
+    if(m.date!==lastDate){
+      if(lastDate)h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastDate=m.date;
+    }
+    h+=bracketRow(homeTeam,awayTeam,ko,'R32');
+  });
+  h+=`</div>`;
+
+  // ── ROUND OF 16 ──────────────────────────────────────
+  h+=`<div class="sec"><span class="sec-lbl">Round of 16</span><span class="sec-prize">4–7 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px">`;
+  lastDate='';
+  R16.forEach(m=>{
+    const homeTeam=m.home||null;
+    const awayTeam=m.away||null;
+    const displayHome=homeTeam||(m.homeTbd||'TBD');
+    const displayAway=awayTeam||(m.awayTbd||'TBD');
+    const ko=R16_RESULTS[m.match];
+    if(m.date!==lastDate){
+      if(lastDate)h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastDate=m.date;
+    }
+    h+=bracketRow(homeTeam?displayHome:null, awayTeam?displayAway:null, ko,'R16');
+  });
+  h+=`</div>`;
+
+  document.getElementById('bracket-body').innerHTML=h;
 }
 
 // ══════════════════════════════════════════════════════
