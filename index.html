@@ -938,32 +938,38 @@ function ownerOf(team){
 // Match numbers with manually-confirmed results that should never be
 // overwritten by the live fetch (used for penalty shootouts where the
 // live API's winner flag has proven unreliable)
-const KO_LOCKED=new Set([3,8,16]);
+const KO_LOCKED=new Set([3,8,12,13,16]);
 
 const KO_RESULTS={
-  // ── ROUND OF 32 ──────────────────────────────────────
-  1:  {score:"0–1",           winner:"Canada",   done:true},  // South Africa vs Canada
-  2:  {score:"2–1",           winner:"Brazil",   done:true},  // Brazil vs Japan
-  16: {score:"1–1 (4–3 pens)",winner:"Paraguay", done:true},  // Germany vs Paraguay
-  3:  {score:"1–1 (3–2 pens)",winner:"Morocco",  done:true},  // Netherlands vs Morocco
-  4:  {score:"2–1",           winner:"Norway",   done:true},  // Norway vs Côte d'Ivoire
-  5:  {score:"3–0",           winner:"France",   done:true},  // France vs Sweden
-  6:  {score:"2–0",           winner:"Mexico",   done:true},  // Mexico vs Ecuador
-  7:  {score:"2–1",           winner:"England",  done:true},  // England vs DR Congo
-  8:  {score:"3–2 (AET)",     winner:"Belgium",  done:true},  // Belgium vs Senegal
-  9:  {score:"2–0",           winner:"United States", done:true}, // USA vs Bosnia
+  // ── ROUND OF 32 ── all 16 confirmed ──────────────────
+  1:  {score:"0–1",             winner:"Canada",        done:true}, // South Africa vs Canada
+  2:  {score:"2–1",             winner:"Brazil",        done:true}, // Brazil vs Japan
+  16: {score:"1–1 (4–3 pens)", winner:"Paraguay",       done:true}, // Germany vs Paraguay
+  3:  {score:"1–1 (3–2 pens)", winner:"Morocco",        done:true}, // Netherlands vs Morocco
+  4:  {score:"2–1",             winner:"Norway",         done:true}, // Norway vs Côte d'Ivoire
+  5:  {score:"3–0",             winner:"France",         done:true}, // France vs Sweden
+  6:  {score:"2–0",             winner:"Mexico",         done:true}, // Mexico vs Ecuador
+  7:  {score:"2–1",             winner:"England",        done:true}, // England vs DR Congo
+  8:  {score:"3–2 (AET)",       winner:"Belgium",        done:true}, // Belgium vs Senegal
+  9:  {score:"2–0",             winner:"United States",  done:true}, // USA vs Bosnia
+  10: {score:"3–0",             winner:"Spain",          done:true}, // Spain vs Austria
+  11: {score:"2–0",             winner:"Switzerland",    done:true}, // Switzerland vs Algeria
+  15: {score:"2–1",             winner:"Portugal",       done:true}, // Portugal vs Croatia
+  13: {score:"1–1 (4–2 pens)", winner:"Egypt",           done:true}, // Egypt vs Australia
+  12: {score:"3–2 (AET)",       winner:"Argentina",      done:true}, // Argentina vs Cabo Verde
+  14: {score:"1–0",             winner:"Colombia",       done:true}, // Colombia vs Ghana
 };
 
 // ── ROUND OF 16 ──────────────────────────────────────
 const R16=[
-  {date:"Fri 4 Jul",  match:1,  home:"Canada",         away:"Morocco"},
-  {date:"Fri 4 Jul",  match:2,  home:"Paraguay",        away:"France"},
-  {date:"Sat 5 Jul",  match:3,  home:"Brazil",          away:"Norway"},
-  {date:"Sat 5 Jul",  match:4,  home:"Mexico",          away:"England"},
-  {date:"Sun 6 Jul",  match:5,  home:null,              away:null, homeTbd:"Winner R32 M15", awayTbd:"Winner R32 M10"}, // Portugal/Croatia vs Spain/Austria
-  {date:"Sun 6 Jul",  match:6,  home:"United States",   away:"Belgium"},
-  {date:"Mon 7 Jul",  match:7,  home:null,              away:null, homeTbd:"Winner R32 M12", awayTbd:"Winner R32 M13"}, // Argentina/Cabo Verde vs Australia/Egypt
-  {date:"Mon 7 Jul",  match:8,  home:null,              away:null, homeTbd:"Winner R32 M11", awayTbd:"Winner R32 M14"}, // Switzerland/Algeria vs Colombia/Ghana
+  {date:"Sat 4 Jul",  match:1, home:"Canada",        away:"Morocco"},
+  {date:"Sat 4 Jul",  match:2, home:"Paraguay",       away:"France"},
+  {date:"Sun 5 Jul",  match:3, home:"Brazil",         away:"Norway"},
+  {date:"Sun 5 Jul",  match:4, home:"Mexico",         away:"England"},
+  {date:"Mon 6 Jul",  match:5, home:"Spain",          away:"Portugal"},
+  {date:"Mon 6 Jul",  match:6, home:"United States",  away:"Belgium"},
+  {date:"Tue 7 Jul",  match:7, home:"Egypt",          away:"Argentina"},
+  {date:"Tue 7 Jul",  match:8, home:"Switzerland",    away:"Colombia"},
 ];
 
 const R16_RESULTS={};
@@ -1336,9 +1342,11 @@ function setP(i){activeSched=i;buildSB();buildMPN();buildSchedule();}
 
 function buildHome(){
   // Dark horse winner: highest FIFA rank (worst number) among qualified teams
+  // Dark horse: highest FIFA rank among teams that qualified from group stage
+  // Uses FINAL_QUAL (not live qual()) so knockout results don't affect the winner
   let dhT=null,dhR=-1,dhO=null,dhPi=0;
   PARTS.forEach((p,pi)=>p.teams.forEach(t=>{
-    const q=qual(t);
+    const q=FINAL_QUAL[t];
     if(q==='won'||q==='qualified'){
       const r=FIFA_RANK[t]||0;
       if(r>dhR){dhR=r;dhT=t;dhO=p.name;dhPi=pi;}
@@ -1386,42 +1394,50 @@ function buildHome(){
 
   h+=`</div>`;
 
-  // ── ROUND OF 32 BRACKET ──────────────────────────────
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Round of 32</span><span class="sec-prize">28 Jun – 3 Jul</span></div>`;
+  // ── ROUND OF 16 ──────────────────────────────────────
+  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Round of 16</span><span class="sec-prize">4–7 Jul</span></div>`;
   h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;">`;
 
-  R32.forEach(m=>{
-    const homeTeam=resolveSlot(m.home.label);
-    const awayTeam=resolveSlot(m.away.label);
+  let lastHmDate='';
+  R16.forEach(m=>{
+    const homeTeam=m.home||null;
+    const awayTeam=m.away||null;
     const homeOwner=ownerOf(homeTeam);
     const awayOwner=ownerOf(awayTeam);
-
-    // Find if there's a knockout result for this match
-    const ko=KO_RESULTS&&KO_RESULTS[m.match];
+    const ko=R16_RESULTS[m.match];
     const homeBg=homeOwner?homeOwner.av.bg:'var(--border2)';
     const homeC=homeOwner?homeOwner.av.c:'var(--text3)';
     const awayBg=awayOwner?awayOwner.av.bg:'var(--border2)';
     const awayC=awayOwner?awayOwner.av.c:'var(--text3)';
+    const scoreDisplay=ko?ko.score:'vs';
+    const homeWon=ko&&ko.winner&&ko.winner===homeTeam;
+    const awayWon=ko&&ko.winner&&ko.winner===awayTeam;
+    const dateShort=m.date.replace(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat) /,'');
+
+    if(m.date!==lastHmDate){
+      if(lastHmDate) h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastHmDate=m.date;
+    }
 
     h+=`<div class="hm-row">
-      <div class="hm-date">${m.date.replace(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat) /,'')}</div>
       <div class="hm-teams">
-        <div class="hm-team${ko&&ko.winner===homeTeam?' hm-winner':''}">
+        <div class="hm-team${homeWon?' hm-winner':''}">
           <span class="hm-dot" style="background:${homeBg}"></span>
-          <span class="hm-name">${homeTeam||m.home.label}</span>
+          <span class="hm-name">${homeTeam||'TBD'}</span>
           ${homeOwner?`<span class="hm-owner" style="background:${homeBg};color:${homeC}">${homeOwner.name.slice(0,2).toUpperCase()}</span>`:''}
         </div>
-        <span class="hm-score">${ko?ko.score:'vs'}</span>
-        <div class="hm-team${ko&&ko.winner===awayTeam?' hm-winner':''}">
+        <span class="hm-score">${scoreDisplay}</span>
+        <div class="hm-team hm-team-right${awayWon?' hm-winner':''}">
           ${awayOwner?`<span class="hm-owner" style="background:${awayBg};color:${awayC}">${awayOwner.name.slice(0,2).toUpperCase()}</span>`:''}
-          <span class="hm-name">${awayTeam||m.away.label}</span>
+          <span class="hm-name">${awayTeam||'TBD'}</span>
           <span class="hm-dot" style="background:${awayBg}"></span>
         </div>
       </div>
     </div>`;
   });
 
-  h+=`</div>`; // close R32 card
+  h+=`</div>`; // close R16 card
 
   document.getElementById('home-body').innerHTML=h;
 }
@@ -1471,7 +1487,7 @@ function buildSchedule(){
 // ══════════════════════════════════════════════════════
 function buildDark(){
   const all=[];
-  PARTS.forEach((p,pi)=>p.teams.forEach(t=>all.push({t,owner:p.name,pi,rank:FIFA_RANK[t]||99,q:qual(t)})));
+  PARTS.forEach((p,pi)=>p.teams.forEach(t=>all.push({t,owner:p.name,pi,rank:FIFA_RANK[t]||99,q:FINAL_QUAL[t]||'tbd'})));
   all.sort((a,b)=>b.rank-a.rank);
   const firstAdv=all.findIndex(x=>x.q==='won'||x.q==='qualified');
 
