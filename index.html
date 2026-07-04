@@ -973,6 +973,7 @@ const R16=[
 ];
 
 const R16_RESULTS={};
+const R16_LOCKED=new Set([]); // add match numbers here if penalties are misread
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -1109,6 +1110,38 @@ async function fetchLiveData(){
           KO_RESULTS[r32.match]={score:scoreDisplay,winner,done:true};
         } else if(inProgress){
           KO_RESULTS[r32.match]={score:`${hs}–${as}*`,winner:null,done:false};
+        }
+      }
+
+      // Find matching R16 match
+      const r16=R16.find(m=>{
+        const h=m.home, a=m.away;
+        if(!h||!a) return false;
+        return (h.toLowerCase()===homeName.toLowerCase()&&a.toLowerCase()===awayName.toLowerCase())||
+               (h.toLowerCase()===awayName.toLowerCase()&&a.toLowerCase()===homeName.toLowerCase());
+      });
+      if(r16&&!R16_LOCKED.has(r16.match)){
+        const isFlipped=r16.home&&r16.home.toLowerCase()===awayName.toLowerCase();
+        const hs=isFlipped?awayScore:homeScore;
+        const as=isFlipped?homeScore:awayScore;
+        const hShoot=isFlipped?awayShootout:homeShootout;
+        const aShoot=isFlipped?homeShootout:awayShootout;
+        const hWon=isFlipped?awayWon:homeWon;
+        const aWon=isFlipped?homeWon:awayWon;
+        if(completed){
+          let winner=null;
+          if(hWon)winner=r16.home;
+          else if(aWon)winner=r16.away;
+          else if(parseInt(hs)!==parseInt(as)){
+            winner=parseInt(hs)>parseInt(as)?r16.home:r16.away;
+          }
+          let scoreDisplay=`${hs}–${as}`;
+          if(hShoot!=null&&aShoot!=null&&hShoot!==''&&aShoot!==''){
+            scoreDisplay+=` (${hShoot}–${aShoot} pens)`;
+          }
+          R16_RESULTS[r16.match]={score:scoreDisplay,winner,done:true};
+        } else if(inProgress){
+          R16_RESULTS[r16.match]={score:`${hs}–${as}*`,winner:null,done:false};
         }
       }
     });
