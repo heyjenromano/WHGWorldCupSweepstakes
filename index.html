@@ -972,8 +972,27 @@ const R16=[
   {date:"Tue 7 Jul",  match:8, home:"Switzerland",    away:"Colombia"},
 ];
 
-const R16_RESULTS={};
-const R16_LOCKED=new Set([]); // add match numbers here if penalties are misread
+const R16_RESULTS={
+  1: {score:"0–1", winner:"Morocco",   done:true}, // Canada vs Morocco
+  2: {score:"0–2", winner:"France",    done:true}, // Paraguay vs France
+  3: {score:"0–1", winner:"Norway",    done:true}, // Brazil vs Norway
+  4: {score:"0–1", winner:"England",   done:true}, // Mexico vs England
+  5: {score:"2–1", winner:"Spain",     done:true}, // Spain vs Portugal
+  6: {score:"1–2", winner:"Belgium",   done:true}, // USA vs Belgium
+  7: {score:"0–1", winner:"Argentina", done:true}, // Egypt vs Argentina
+  8: {score:"1–2", winner:"Colombia",  done:true}, // Switzerland vs Colombia
+};
+const R16_LOCKED=new Set([1,2,3,4,5,6,7,8]);
+
+// ── QUARTER FINALS ───────────────────────────────────
+const QF=[
+  {date:"Wed 9 Jul",  match:1, home:"France",    away:"Morocco"},
+  {date:"Wed 9 Jul",  match:2, home:"Spain",     away:"Belgium"},
+  {date:"Thu 10 Jul", match:3, home:"Norway",    away:"England"},
+  {date:"Fri 11 Jul", match:4, home:"Argentina", away:"Colombia"},
+];
+const QF_RESULTS={};
+const QF_LOCKED=new Set([]);
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -1010,17 +1029,24 @@ function applyKnockoutStatus(){
       QUAL_CACHE[loser]='knocked_out';
     }
   });
+  // QF
+  QF.forEach(m=>{
+    const ko=QF_RESULTS[m.match];
+    if(!ko||!ko.done||!ko.winner)return;
+    const loser=ko.winner===m.home?m.away:m.home;
+    QUAL_CACHE[ko.winner]='qf_through';
+    QUAL_CACHE[loser]='knocked_out';
+  });
   // R16
   R16.forEach(m=>{
     const ko=R16_RESULTS[m.match];
     if(!ko||!ko.done)return;
-    const home=m.home||m.homeTbd;
-    const away=m.away||m.awayTbd;
-    if(ko.winner){
-      const loser=ko.winner===home?away:home;
-      QUAL_CACHE[ko.winner]='r16_through';
-      if(loser&&FINAL_QUAL[loser])QUAL_CACHE[loser]='knocked_out';
-    }
+    const home=m.home;
+    const away=m.away;
+    if(!home||!away||!ko.winner)return;
+    const loser=ko.winner===home?away:home;
+    QUAL_CACHE[ko.winner]='r16_through';
+    QUAL_CACHE[loser]='knocked_out';
   });
 }
 
@@ -1142,6 +1168,37 @@ async function fetchLiveData(){
           R16_RESULTS[r16.match]={score:scoreDisplay,winner,done:true};
         } else if(inProgress){
           R16_RESULTS[r16.match]={score:`${hs}–${as}*`,winner:null,done:false};
+        }
+      }
+
+      // Find matching QF match
+      const qf=QF.find(m=>{
+        if(!m.home||!m.away) return false;
+        return (m.home.toLowerCase()===homeName.toLowerCase()&&m.away.toLowerCase()===awayName.toLowerCase())||
+               (m.home.toLowerCase()===awayName.toLowerCase()&&m.away.toLowerCase()===homeName.toLowerCase());
+      });
+      if(qf&&!QF_LOCKED.has(qf.match)){
+        const isFlipped=qf.home&&qf.home.toLowerCase()===awayName.toLowerCase();
+        const hs=isFlipped?awayScore:homeScore;
+        const as=isFlipped?homeScore:awayScore;
+        const hShoot=isFlipped?awayShootout:homeShootout;
+        const aShoot=isFlipped?homeShootout:awayShootout;
+        const hWon=isFlipped?awayWon:homeWon;
+        const aWon=isFlipped?homeWon:awayWon;
+        if(completed){
+          let winner=null;
+          if(hWon)winner=qf.home;
+          else if(aWon)winner=qf.away;
+          else if(parseInt(hs)!==parseInt(as)){
+            winner=parseInt(hs)>parseInt(as)?qf.home:qf.away;
+          }
+          let scoreDisplay=`${hs}–${as}`;
+          if(hShoot!=null&&aShoot!=null&&hShoot!==''&&aShoot!==''){
+            scoreDisplay+=` (${hShoot}–${aShoot} pens)`;
+          }
+          QF_RESULTS[qf.match]={score:scoreDisplay,winner,done:true};
+        } else if(inProgress){
+          QF_RESULTS[qf.match]={score:`${hs}–${as}*`,winner:null,done:false};
         }
       }
     });
@@ -1325,7 +1382,7 @@ function fD(ds,h,off){
 function posClass(t){
   const q=qual(t);
   if(q==='won')return'tag-won';
-  if(q==='r16_through'||q==='through')return'tag-adv';
+  if(q==='qf_through'||q==='r16_through'||q==='through')return'tag-adv';
   if(q==='qualified')return'tag-adv';
   if(q==='knocked_out'||q==='eliminated')return'tag-elim';
   return'tag-tbd';
@@ -1333,6 +1390,7 @@ function posClass(t){
 function posLabel(t){
   const q=qual(t);
   if(q==='won')return'🏆 Won Group';
+  if(q==='qf_through')return'⚽ Semi-final';
   if(q==='r16_through')return'⚽ QF';
   if(q==='through')return'⚽ R16';
   if(q==='qualified')return'✅ Qualified';
@@ -1427,25 +1485,22 @@ function buildHome(){
 
   h+=`</div>`;
 
-  // ── ROUND OF 16 ──────────────────────────────────────
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Round of 16</span><span class="sec-prize">4–7 Jul</span></div>`;
+  // ── QUARTER FINALS ───────────────────────────────────
+  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Quarter Finals</span><span class="sec-prize">9–11 Jul</span></div>`;
   h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;">`;
 
   let lastHmDate='';
-  R16.forEach(m=>{
-    const homeTeam=m.home||null;
-    const awayTeam=m.away||null;
-    const homeOwner=ownerOf(homeTeam);
-    const awayOwner=ownerOf(awayTeam);
-    const ko=R16_RESULTS[m.match];
+  QF.forEach(m=>{
+    const homeOwner=ownerOf(m.home);
+    const awayOwner=ownerOf(m.away);
+    const ko=QF_RESULTS[m.match];
     const homeBg=homeOwner?homeOwner.av.bg:'var(--border2)';
     const homeC=homeOwner?homeOwner.av.c:'var(--text3)';
     const awayBg=awayOwner?awayOwner.av.bg:'var(--border2)';
     const awayC=awayOwner?awayOwner.av.c:'var(--text3)';
     const scoreDisplay=ko?ko.score:'vs';
-    const homeWon=ko&&ko.winner&&ko.winner===homeTeam;
-    const awayWon=ko&&ko.winner&&ko.winner===awayTeam;
-    const dateShort=m.date.replace(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat) /,'');
+    const homeWon=ko&&ko.winner===m.home;
+    const awayWon=ko&&ko.winner===m.away;
 
     if(m.date!==lastHmDate){
       if(lastHmDate) h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
@@ -1457,20 +1512,20 @@ function buildHome(){
       <div class="hm-teams">
         <div class="hm-team${homeWon?' hm-winner':''}">
           <span class="hm-dot" style="background:${homeBg}"></span>
-          <span class="hm-name">${homeTeam||'TBD'}</span>
+          <span class="hm-name">${m.home}</span>
           ${homeOwner?`<span class="hm-owner" style="background:${homeBg};color:${homeC}">${homeOwner.name.slice(0,2).toUpperCase()}</span>`:''}
         </div>
         <span class="hm-score">${scoreDisplay}</span>
         <div class="hm-team hm-team-right${awayWon?' hm-winner':''}">
           ${awayOwner?`<span class="hm-owner" style="background:${awayBg};color:${awayC}">${awayOwner.name.slice(0,2).toUpperCase()}</span>`:''}
-          <span class="hm-name">${awayTeam||'TBD'}</span>
+          <span class="hm-name">${m.away}</span>
           <span class="hm-dot" style="background:${awayBg}"></span>
         </div>
       </div>
     </div>`;
   });
 
-  h+=`</div>`; // close R16 card
+  h+=`</div>`;
 
   document.getElementById('home-body').innerHTML=h;
 }
@@ -1822,6 +1877,21 @@ function buildBracket(){
       lastDate=m.date;
     }
     h+=bracketRow(homeTeam?displayHome:null, awayTeam?displayAway:null, ko,'R16');
+  });
+  h+=`</div>`;
+
+  // ── QUARTER FINALS ───────────────────────────────────
+  h+=`<div class="sec"><span class="sec-lbl">Quarter Finals</span><span class="sec-prize">9–11 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin-bottom:20px">`;
+  lastDate='';
+  QF.forEach(m=>{
+    const ko=QF_RESULTS[m.match];
+    if(m.date!==lastDate){
+      if(lastDate)h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastDate=m.date;
+    }
+    h+=bracketRow(m.home,m.away,ko,'QF');
   });
   h+=`</div>`;
 
