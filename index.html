@@ -973,14 +973,14 @@ const R16=[
 ];
 
 const R16_RESULTS={
-  1: {score:"0–1", winner:"Morocco",   done:true}, // Canada vs Morocco
-  2: {score:"0–2", winner:"France",    done:true}, // Paraguay vs France
-  3: {score:"0–1", winner:"Norway",    done:true}, // Brazil vs Norway
-  4: {score:"0–1", winner:"England",   done:true}, // Mexico vs England
-  5: {score:"2–1", winner:"Spain",     done:true}, // Spain vs Portugal
-  6: {score:"1–2", winner:"Belgium",   done:true}, // USA vs Belgium
-  7: {score:"0–1", winner:"Argentina", done:true}, // Egypt vs Argentina
-  8: {score:"2–1", winner:"Switzerland",  done:true}, // Switzerland vs Colombia
+  1: {score:"3–0",             winner:"Morocco",     done:true}, // Canada vs Morocco
+  2: {score:"0–1",             winner:"France",      done:true}, // Paraguay vs France
+  3: {score:"1–2",             winner:"Norway",      done:true}, // Brazil vs Norway
+  4: {score:"2–3",             winner:"England",     done:true}, // Mexico vs England
+  5: {score:"0–1",             winner:"Spain",       done:true}, // Spain vs Portugal
+  6: {score:"4–1",             winner:"Belgium",     done:true}, // USA vs Belgium
+  7: {score:"2–3",             winner:"Argentina",   done:true}, // Egypt vs Argentina
+  8: {score:"0–0 (4–3 pens)", winner:"Switzerland", done:true}, // Switzerland vs Colombia
 };
 const R16_LOCKED=new Set([1,2,3,4,5,6,7,8]);
 
@@ -991,8 +991,10 @@ const QF=[
   {date:"Thu 10 Jul", match:3, home:"Norway",    away:"England"},
   {date:"Fri 11 Jul", match:4, home:"Argentina", away:"Switzerland"},
 ];
-const QF_RESULTS={};
-const QF_LOCKED=new Set([]);
+const QF_RESULTS={
+  1: {score:"2–0", winner:"France", done:true}, // France vs Morocco
+};
+const QF_LOCKED=new Set([1]);
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -1029,14 +1031,6 @@ function applyKnockoutStatus(){
       QUAL_CACHE[loser]='knocked_out';
     }
   });
-  // QF
-  QF.forEach(m=>{
-    const ko=QF_RESULTS[m.match];
-    if(!ko||!ko.done||!ko.winner)return;
-    const loser=ko.winner===m.home?m.away:m.home;
-    QUAL_CACHE[ko.winner]='qf_through';
-    QUAL_CACHE[loser]='knocked_out';
-  });
   // R16
   R16.forEach(m=>{
     const ko=R16_RESULTS[m.match];
@@ -1046,6 +1040,14 @@ function applyKnockoutStatus(){
     if(!home||!away||!ko.winner)return;
     const loser=ko.winner===home?away:home;
     QUAL_CACHE[ko.winner]='r16_through';
+    QUAL_CACHE[loser]='knocked_out';
+  });
+  // QF
+  QF.forEach(m=>{
+    const ko=QF_RESULTS[m.match];
+    if(!ko||!ko.done||!ko.winner)return;
+    const loser=ko.winner===m.home?m.away:m.home;
+    QUAL_CACHE[ko.winner]='qf_through';
     QUAL_CACHE[loser]='knocked_out';
   });
 }
