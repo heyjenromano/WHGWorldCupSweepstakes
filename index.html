@@ -992,9 +992,28 @@ const QF=[
   {date:"Fri 11 Jul", match:4, home:"Argentina", away:"Switzerland"},
 ];
 const QF_RESULTS={
-  1: {score:"2–0", winner:"France", done:true}, // France vs Morocco
+  1: {score:"2–0",       winner:"France",   done:true}, // France vs Morocco
+  2: {score:"2–1",       winner:"Spain",    done:true}, // Spain vs Belgium
+  3: {score:"1–2 (AET)", winner:"England",  done:true}, // Norway vs England
+  4: {score:"3–1 (AET)", winner:"Argentina",done:true}, // Argentina vs Switzerland
 };
-const QF_LOCKED=new Set([1]);
+const QF_LOCKED=new Set([1,2,3,4]);
+
+// ── SEMI FINALS ──────────────────────────────────────
+const SF=[
+  {date:"Tue 14 Jul", match:1, home:"France",   away:"Spain"},
+  {date:"Wed 15 Jul", match:2, home:"England",  away:"Argentina"},
+];
+const SF_RESULTS={};
+const SF_LOCKED=new Set([]);
+
+// ── FINAL & THIRD PLACE ───────────────────────────────
+const FINAL=[
+  {date:"Sat 18 Jul", match:1, home:null, away:null, label:"3rd Place"},
+  {date:"Sun 19 Jul", match:2, home:null, away:null, label:"Final"},
+];
+const FINAL_RESULTS={};
+const FINAL_LOCKED=new Set([]);
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -1049,6 +1068,14 @@ function applyKnockoutStatus(){
     const loser=ko.winner===m.home?m.away:m.home;
     QUAL_CACHE[ko.winner]='qf_through';
     QUAL_CACHE[loser]='knocked_out';
+  });
+  // SF
+  SF.forEach(m=>{
+    const ko=SF_RESULTS[m.match];
+    if(!ko||!ko.done||!ko.winner)return;
+    const loser=ko.winner===m.home?m.away:m.home;
+    QUAL_CACHE[ko.winner]='finalist';
+    QUAL_CACHE[loser]='sf_out';
   });
 }
 
@@ -1201,6 +1228,32 @@ async function fetchLiveData(){
           QF_RESULTS[qf.match]={score:scoreDisplay,winner,done:true};
         } else if(inProgress){
           QF_RESULTS[qf.match]={score:`${hs}–${as}*`,winner:null,done:false};
+        }
+      }
+
+      // SF matching
+      const sf=SF.find(m=>m.home&&m.away&&(
+        (m.home.toLowerCase()===homeName.toLowerCase()&&m.away.toLowerCase()===awayName.toLowerCase())||
+        (m.home.toLowerCase()===awayName.toLowerCase()&&m.away.toLowerCase()===homeName.toLowerCase())
+      ));
+      if(sf&&!SF_LOCKED.has(sf.match)){
+        const isFlipped=sf.home.toLowerCase()===awayName.toLowerCase();
+        const hs=isFlipped?awayScore:homeScore;
+        const as=isFlipped?homeScore:awayScore;
+        const hWon=isFlipped?awayWon:homeWon;
+        const aWon=isFlipped?homeWon:awayWon;
+        const hShoot=isFlipped?awayShootout:homeShootout;
+        const aShoot=isFlipped?homeShootout:awayShootout;
+        if(completed){
+          let winner=null;
+          if(hWon)winner=sf.home;
+          else if(aWon)winner=sf.away;
+          else if(parseInt(hs)!==parseInt(as))winner=parseInt(hs)>parseInt(as)?sf.home:sf.away;
+          let scoreDisplay=`${hs}–${as}`;
+          if(hShoot!=null&&aShoot!=null&&hShoot!==''&&aShoot!=='')scoreDisplay+=` (${hShoot}–${aShoot} pens)`;
+          SF_RESULTS[sf.match]={score:scoreDisplay,winner,done:true};
+        } else if(inProgress){
+          SF_RESULTS[sf.match]={score:`${hs}–${as}*`,winner:null,done:false};
         }
       }
     });
@@ -1384,18 +1437,21 @@ function fD(ds,h,off){
 function posClass(t){
   const q=qual(t);
   if(q==='won')return'tag-won';
+  if(q==='finalist')return'tag-won';
   if(q==='qf_through'||q==='r16_through'||q==='through')return'tag-adv';
   if(q==='qualified')return'tag-adv';
-  if(q==='knocked_out'||q==='eliminated')return'tag-elim';
+  if(q==='sf_out'||q==='knocked_out'||q==='eliminated')return'tag-elim';
   return'tag-tbd';
 }
 function posLabel(t){
   const q=qual(t);
+  if(q==='finalist')return'🏆 Finalist';
   if(q==='won')return'🏆 Won Group';
   if(q==='qf_through')return'⚽ Semi-final';
   if(q==='r16_through')return'⚽ QF';
   if(q==='through')return'⚽ R16';
   if(q==='qualified')return'✅ Qualified';
+  if(q==='sf_out')return'❌ Semi-final Exit';
   if(q==='knocked_out')return'❌ Knocked Out';
   if(q==='eliminated')return'❌ Eliminated';
   return'TBD';
@@ -1487,46 +1543,67 @@ function buildHome(){
 
   h+=`</div>`;
 
-  // ── QUARTER FINALS ───────────────────────────────────
-  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Quarter Finals</span><span class="sec-prize">9–11 Jul</span></div>`;
-  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;">`;
-
-  let lastHmDate='';
-  QF.forEach(m=>{
-    const homeOwner=ownerOf(m.home);
-    const awayOwner=ownerOf(m.away);
-    const ko=QF_RESULTS[m.match];
+  // ── SEMI FINALS & FINAL ──────────────────────────────
+  // Helper to render a match row
+  function hmRow(homeTeam, awayTeam, koResult, tbd){
+    const homeOwner=homeTeam?ownerOf(homeTeam):null;
+    const awayOwner=awayTeam?ownerOf(awayTeam):null;
     const homeBg=homeOwner?homeOwner.av.bg:'var(--border2)';
     const homeC=homeOwner?homeOwner.av.c:'var(--text3)';
     const awayBg=awayOwner?awayOwner.av.bg:'var(--border2)';
     const awayC=awayOwner?awayOwner.av.c:'var(--text3)';
-    const scoreDisplay=ko?ko.score:'vs';
-    const homeWon=ko&&ko.winner===m.home;
-    const awayWon=ko&&ko.winner===m.away;
-
-    if(m.date!==lastHmDate){
-      if(lastHmDate) h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
-      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
-      lastHmDate=m.date;
-    }
-
-    h+=`<div class="hm-row">
+    const scoreDisplay=koResult?koResult.score:'vs';
+    const homeWon=koResult&&koResult.winner===homeTeam;
+    const awayWon=koResult&&koResult.winner===awayTeam;
+    return `<div class="hm-row">
       <div class="hm-teams">
         <div class="hm-team${homeWon?' hm-winner':''}">
           <span class="hm-dot" style="background:${homeBg}"></span>
-          <span class="hm-name">${m.home}</span>
+          <span class="hm-name">${homeTeam||tbd||'TBD'}</span>
           ${homeOwner?`<span class="hm-owner" style="background:${homeBg};color:${homeC}">${homeOwner.name.slice(0,2).toUpperCase()}</span>`:''}
         </div>
         <span class="hm-score">${scoreDisplay}</span>
         <div class="hm-team hm-team-right${awayWon?' hm-winner':''}">
           ${awayOwner?`<span class="hm-owner" style="background:${awayBg};color:${awayC}">${awayOwner.name.slice(0,2).toUpperCase()}</span>`:''}
-          <span class="hm-name">${m.away}</span>
+          <span class="hm-name">${awayTeam||tbd||'TBD'}</span>
           <span class="hm-dot" style="background:${awayBg}"></span>
         </div>
       </div>
     </div>`;
-  });
+  }
 
+  h+=`<div class="sec" style="margin-top:20px"><span class="sec-lbl">Semi Finals</span><span class="sec-prize">14–15 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin-bottom:12px">`;
+  let lastHmDate='';
+  SF.forEach(m=>{
+    const ko=SF_RESULTS[m.match];
+    if(m.date!==lastHmDate){
+      if(lastHmDate)h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastHmDate=m.date;
+    }
+    h+=hmRow(m.home,m.away,ko);
+  });
+  h+=`</div>`;
+
+  // Derive final teams from SF results
+  const sfWinners=SF.map(m=>SF_RESULTS[m.match]?.winner||null);
+  const sfLosers=SF.map(m=>{
+    const ko=SF_RESULTS[m.match];
+    if(!ko||!ko.winner)return null;
+    return ko.winner===m.home?m.away:m.home;
+  });
+  const finalist1=sfWinners[0], finalist2=sfWinners[1];
+  const third1=sfLosers[0], third2=sfLosers[1];
+
+  h+=`<div class="sec" style="margin-top:4px"><span class="sec-lbl">Final</span><span class="sec-prize">Sun 19 Jul · New Jersey</span></div>`;
+  h+=`<div style="background:var(--panel);border:2px solid #f59e0b;border-radius:10px;padding:4px 14px;margin-bottom:12px">`;
+  h+=hmRow(finalist1,finalist2,FINAL_RESULTS[2],'TBD');
+  h+=`</div>`;
+
+  h+=`<div class="sec" style="margin-top:4px"><span class="sec-lbl">3rd Place</span><span class="sec-prize">Sat 18 Jul · Miami</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px">`;
+  h+=hmRow(third1,third2,FINAL_RESULTS[1],'TBD');
   h+=`</div>`;
 
   document.getElementById('home-body').innerHTML=h;
@@ -1895,6 +1972,37 @@ function buildBracket(){
     }
     h+=bracketRow(m.home,m.away,ko,'QF');
   });
+  h+=`</div>`;
+
+  // ── SEMI FINALS ──────────────────────────────────────
+  h+=`<div class="sec"><span class="sec-lbl">Semi Finals</span><span class="sec-prize">14–15 Jul</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin-bottom:20px">`;
+  lastDate='';
+  SF.forEach(m=>{
+    const ko=SF_RESULTS[m.match];
+    if(m.date!==lastDate){
+      if(lastDate)h+=`<div style="border-top:1px solid var(--border);margin:2px 0"></div>`;
+      h+=`<div style="font-size:10px;font-weight:700;color:var(--text3);padding:8px 0 2px;text-transform:uppercase;letter-spacing:0.06em">${m.date}</div>`;
+      lastDate=m.date;
+    }
+    h+=bracketRow(m.home,m.away,ko,'SF');
+  });
+  h+=`</div>`;
+
+  // Derive finalists
+  const sfW1=SF_RESULTS[1]?.winner||null;
+  const sfW2=SF_RESULTS[2]?.winner||null;
+  const sfL1=SF_RESULTS[1]?(SF[0].home===SF_RESULTS[1].winner?SF[0].away:SF[0].home):null;
+  const sfL2=SF_RESULTS[2]?(SF[1].home===SF_RESULTS[2].winner?SF[1].away:SF[1].home):null;
+
+  h+=`<div class="sec"><span class="sec-lbl">Final</span><span class="sec-prize">Sun 19 Jul · New Jersey</span></div>`;
+  h+=`<div style="background:var(--panel);border:2px solid #f59e0b;border-radius:10px;padding:4px 14px;margin-bottom:20px">`;
+  h+=bracketRow(sfW1,sfW2,FINAL_RESULTS[2],'Final');
+  h+=`</div>`;
+
+  h+=`<div class="sec"><span class="sec-lbl">3rd Place</span><span class="sec-prize">Sat 18 Jul · Miami</span></div>`;
+  h+=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin-bottom:20px">`;
+  h+=bracketRow(sfL1,sfL2,FINAL_RESULTS[1],'3rd Place');
   h+=`</div>`;
 
   document.getElementById('bracket-body').innerHTML=h;
