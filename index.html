@@ -600,15 +600,6 @@ body{background:var(--navy);color:var(--text1);font-family:'Inter',sans-serif;mi
         </div>
       </div>
 
-      <!-- Prize strip -->
-      <div class="prize-strip" role="list" aria-label="Prize breakdown">
-        <div class="pz" role="listitem"><div class="pz-lbl">1st Place</div><div class="pz-amt">£45</div><div class="pz-desc">Tournament winner</div></div>
-        <div class="pz" role="listitem"><div class="pz-lbl">3rd Place</div><div class="pz-amt">£20</div><div class="pz-desc">Bronze match</div></div>
-        <div class="pz" role="listitem"><div class="pz-lbl">2nd Place</div><div class="pz-amt">£25</div><div class="pz-desc">Runner-up</div></div>
-        <div class="pz" role="listitem" style="border-top-color:var(--yellow)"><div class="pz-lbl">Dark Horse</div><div class="pz-amt">£15</div><div class="pz-desc">Lowest ranked to progress</div></div>
-        <div class="pz" role="listitem" style="border-top-color:var(--red)"><div class="pz-lbl">Discipline</div><div class="pz-amt">£15</div><div class="pz-desc">Most cards collected</div></div>
-      </div>
-
       <div id="home-body"></div>
     </div>
 
@@ -874,23 +865,55 @@ const ESPN_NAME_MAP={
 
 // Fallback static DISC (used until live data loads)
 let DISC=[
-  {team:"South Africa",y:2,r:2},{team:"Paraguay",y:5,r:0},{team:"Mexico",y:1,r:1},
-  {team:"Côte d'Ivoire",y:3,r:0},{team:"Scotland",y:3,r:0},{team:"Portugal",y:3,r:0},
-  {team:"Bosnia & Herzegovina",y:3,r:0},{team:"Netherlands",y:3,r:0},
-  {team:"Qatar",y:2,r:0},{team:"Panama",y:2,r:0},{team:"Egypt",y:2,r:0},
-  {team:"Belgium",y:2,r:0},{team:"Canada",y:2,r:0},{team:"Brazil",y:2,r:0},
-  {team:"Ghana",y:1,r:0},{team:"Iraq",y:1,r:0},{team:"DR Congo",y:1,r:0},
-  {team:"Haiti",y:1,r:0},{team:"Cabo Verde",y:1,r:0},{team:"Uzbekistan",y:1,r:0},
-  {team:"United States",y:1,r:0},{team:"Tunisia",y:1,r:0},{team:"Saudi Arabia",y:1,r:0},
-  {team:"Switzerland",y:1,r:0},{team:"Austria",y:1,r:0},{team:"Iran",y:1,r:0},
-  {team:"Türkiye",y:1,r:0},{team:"Korea Republic",y:1,r:0},{team:"Ecuador",y:1,r:0},
-  {team:"Colombia",y:1,r:0},{team:"Spain",y:1,r:0},{team:"Curaçao",y:0,r:0},
-  {team:"Jordan",y:0,r:0},{team:"Morocco",y:0,r:0},{team:"New Zealand",y:0,r:0},
-  {team:"Senegal",y:0,r:0},{team:"Australia",y:0,r:0},{team:"Japan",y:0,r:0},
-  {team:"Algeria",y:0,r:0},{team:"Germany",y:0,r:0},{team:"France",y:0,r:0},
-  {team:"Croatia",y:0,r:0},{team:"Sweden",y:0,r:0},{team:"Norway",y:0,r:0},
-  {team:"Czechia",y:0,r:0},{team:"England",y:0,r:0},{team:"Uruguay",y:0,r:0},
-  {team:"Argentina",y:0,r:0},
+  // Source: ESPN FIFA World Cup Discipline Stats (screenshot, final — 21 Jul 2026)
+  {team:"Argentina",            y:13, r:1},
+  {team:"Egypt",                y:12, r:0},
+  {team:"Paraguay",             y:9,  r:1},
+  {team:"South Africa",         y:4,  r:2},
+  {team:"England",              y:8,  r:1},
+  {team:"Ecuador",              y:8,  r:1},
+  {team:"Canada",               y:11, r:0},
+  {team:"Qatar",                y:4,  r:2},
+  {team:"United States",        y:7,  r:1},
+  {team:"Bosnia & Herzegovina", y:7,  r:1},
+  {team:"Switzerland",          y:6,  r:1},
+  {team:"Belgium",              y:6,  r:1},
+  {team:"Uruguay",              y:5,  r:1},
+  {team:"Colombia",             y:8,  r:0},
+  {team:"Brazil",               y:8,  r:0},
+  {team:"Curaçao",              y:7,  r:0},
+  {team:"Iraq",                 y:4,  r:1},
+  {team:"Morocco",              y:7,  r:0},
+  {team:"Haiti",                y:7,  r:0},
+  {team:"Portugal",             y:7,  r:0},
+  {team:"Mexico",               y:4,  r:1},
+  {team:"Ghana",                y:6,  r:0},
+  {team:"DR Congo",             y:6,  r:0},
+  {team:"Saudi Arabia",         y:6,  r:0},
+  {team:"France",               y:6,  r:0},
+  {team:"Iran",                 y:6,  r:0},
+  {team:"Spain",                y:6,  r:0},
+  {team:"Panama",               y:5,  r:0},
+  {team:"Cabo Verde",           y:5,  r:0},
+  {team:"Australia",            y:5,  r:0},
+  {team:"Scotland",             y:5,  r:0},
+  {team:"Austria",              y:5,  r:0},
+  {team:"Sweden",               y:5,  r:0},
+  {team:"Côte d'Ivoire",       y:4,  r:0},
+  {team:"Jordan",               y:4,  r:0},
+  {team:"New Zealand",          y:4,  r:0},
+  {team:"Uzbekistan",           y:4,  r:0},
+  {team:"Japan",                y:4,  r:0},
+  {team:"Croatia",              y:4,  r:0},
+  {team:"Korea Republic",       y:4,  r:0},
+  {team:"Senegal",              y:3,  r:0},
+  {team:"Algeria",              y:3,  r:0},
+  {team:"Germany",              y:3,  r:0},
+  {team:"Norway",               y:3,  r:0},
+  {team:"Netherlands",          y:3,  r:0},
+  {team:"Türkiye",              y:3,  r:0},
+  {team:"Tunisia",              y:1,  r:0},
+  {team:"Czechia",              y:1,  r:0},
 ];
 const cs=d=>d.y+d.r*2;
 
@@ -1004,16 +1027,22 @@ const SF=[
   {date:"Tue 14 Jul", match:1, home:"France",   away:"Spain"},
   {date:"Wed 15 Jul", match:2, home:"England",  away:"Argentina"},
 ];
-const SF_RESULTS={};
-const SF_LOCKED=new Set([]);
+const SF_RESULTS={
+  1: {score:"2–0",       winner:"Spain",     done:true}, // France vs Spain
+  2: {score:"1–2",       winner:"Argentina", done:true}, // England vs Argentina
+};
+const SF_LOCKED=new Set([1,2]);
 
 // ── FINAL & THIRD PLACE ───────────────────────────────
 const FINAL=[
   {date:"Sat 18 Jul", match:1, home:null, away:null, label:"3rd Place"},
   {date:"Sun 19 Jul", match:2, home:null, away:null, label:"Final"},
 ];
-const FINAL_RESULTS={};
-const FINAL_LOCKED=new Set([]);
+const FINAL_RESULTS={
+  1: {score:"6–4",       winner:"England",   done:true}, // England vs France (3rd place)
+  2: {score:"0–0 (AET, Torres 106')", winner:"Spain", done:true}, // Spain vs Argentina (Final)
+};
+const FINAL_LOCKED=new Set([1,2]);
 
 const R32=[
   {date:"Sun 28 Jun", match:1,  home:{label:"A2"}, away:{label:"B2"}},
@@ -1077,6 +1106,14 @@ function applyKnockoutStatus(){
     QUAL_CACHE[ko.winner]='finalist';
     QUAL_CACHE[loser]='sf_out';
   });
+  // Final
+  if(FINAL_RESULTS[2]?.done&&FINAL_RESULTS[2]?.winner){
+    const w=FINAL_RESULTS[2].winner;
+    const sfTeams=[SF_RESULTS[1]?.winner,SF_RESULTS[2]?.winner].filter(Boolean);
+    const runner=sfTeams.find(t=>t!==w);
+    QUAL_CACHE[w]='champion';
+    if(runner)QUAL_CACHE[runner]='runner_up';
+  }
 }
 
 // Single shared API fetch — updates both scores and discipline
@@ -1293,6 +1330,8 @@ async function fetchLiveData(){
     else if(activePage==='dark')buildDark();
     else if(activePage==='disc')buildDisc();
     else if(activePage==='bracket')buildBracket();
+    // Always rebuild home body so discipline tile stays current
+    if(activePage!=='home') buildHome();
 
     const now=new Date().toLocaleTimeString();
     document.querySelectorAll('.live-status').forEach(el=>el.textContent=`Live · updated ${now}`);
@@ -1436,8 +1475,9 @@ function fD(ds,h,off){
 }
 function posClass(t){
   const q=qual(t);
+  if(q==='champion')return'tag-won';
+  if(q==='runner_up'||q==='finalist')return'tag-won';
   if(q==='won')return'tag-won';
-  if(q==='finalist')return'tag-won';
   if(q==='qf_through'||q==='r16_through'||q==='through')return'tag-adv';
   if(q==='qualified')return'tag-adv';
   if(q==='sf_out'||q==='knocked_out'||q==='eliminated')return'tag-elim';
@@ -1445,13 +1485,15 @@ function posClass(t){
 }
 function posLabel(t){
   const q=qual(t);
+  if(q==='champion')return'🏆 World Champions';
+  if(q==='runner_up')return'🥈 Runners Up';
   if(q==='finalist')return'🏆 Finalist';
-  if(q==='won')return'🏆 Won Group';
+  if(q==='sf_out')return'❌ Semi-final Exit';
   if(q==='qf_through')return'⚽ Semi-final';
   if(q==='r16_through')return'⚽ QF';
   if(q==='through')return'⚽ R16';
   if(q==='qualified')return'✅ Qualified';
-  if(q==='sf_out')return'❌ Semi-final Exit';
+  if(q==='won')return'🏆 Won Group';
   if(q==='knocked_out')return'❌ Knocked Out';
   if(q==='eliminated')return'❌ Eliminated';
   return'TBD';
@@ -1518,27 +1560,44 @@ function buildHome(){
   h+=`<div class="sec"><span class="sec-lbl">Prize standings</span></div>`;
   h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">`;
 
-  // Dark horse tile — confirmed winner, gold border
-  if(dhT){
-    const dhP=PARTS[dhPi];
-    h+=`<div class="prize-tile" onclick="showPlayer(${dhPi})" style="cursor:pointer;border:2px solid #f59e0b;box-shadow:0 0 12px rgba(245,158,11,0.3);border-top:4px solid #f59e0b">
-      <div class="prize-tile-label" style="color:#b45309">🐴 Dark Horse · £15</div>
-      <div class="prize-tile-av" style="background:${dhP.av.bg};color:${dhP.av.c}">${dhO.slice(0,2).toUpperCase()}</div>
-      <div class="prize-tile-name">${dhO}</div>
-      <div class="prize-tile-sub">${dhT} · FIFA #${dhR}</div>
-      <div style="font-size:10px;font-weight:700;color:#b45309;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">🏆 Winner</div>
+  // Helper to build a winner tile
+  function prizeTile(label, amount, desc, ownerName, ownerP, subtext, color, onclick){
+    return `<div class="prize-tile" onclick="${onclick}" style="cursor:pointer;border:2px solid ${color};box-shadow:0 0 10px ${color}44;border-top:4px solid ${color}">
+      <div class="prize-tile-label" style="color:${color}">${label}</div>
+      <div class="prize-tile-amount" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${color}">${amount}</div>
+      <div class="prize-tile-av" style="background:${ownerP.av.bg};color:${ownerP.av.c}">${ownerName.slice(0,2).toUpperCase()}</div>
+      <div class="prize-tile-name">${ownerName}</div>
+      <div class="prize-tile-sub">${subtext}</div>
+      <div style="font-size:10px;font-weight:700;color:${color};letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">🏆 Winner</div>
     </div>`;
   }
 
-  // Discipline tile
+  // 1st place — Feline (Spain)
+  const p1=PARTS.find(p=>p.teams.includes('Spain'));
+  const pi1=PARTS.findIndex(p=>p.teams.includes('Spain'));
+  h+=prizeTile('🥇 1st Place','£45','Tournament winner','Feline',p1,'Spain 🏆 World Champions',`var(--green)`,`showPlayer(${pi1})`);
+
+  // 2nd place — Feline (Argentina)
+  const p2=PARTS.find(p=>p.teams.includes('Argentina'));
+  const pi2=PARTS.findIndex(p=>p.teams.includes('Argentina'));
+  h+=prizeTile('🥈 2nd Place','£25','Runner-up','Feline',p2,'Argentina 🥈 Runners Up','#9ca3af',`showPlayer(${pi2})`);
+
+  // 3rd place — Bex (England)
+  const thirdWinner=FINAL_RESULTS[1]?.winner||'England';
+  const p3=PARTS.find(p=>p.teams.includes(thirdWinner));
+  const pi3=PARTS.findIndex(p=>p.teams.includes(thirdWinner));
+  if(p3) h+=prizeTile('🥉 3rd Place','£20','Bronze match',p3.name,p3,`${thirdWinner} · Won 3rd Place`,'#cd7f32',`showPlayer(${pi3})`);
+
+  // Dark horse — Mary (Ghana)
+  if(dhT){
+    const dhP=PARTS[dhPi];
+    h+=prizeTile('🐴 Dark Horse','£15','Lowest ranked qualifier',dhO,dhP,`${dhT} · FIFA #${dhR}`,'#f59e0b',`showPlayer(${dhPi})`);
+  }
+
+  // Discipline — Crane wins (tournament complete, final data confirmed)
   if(dl){
     const [dln,dld]=dl;const dlP=PARTS[dld.pi];
-    h+=`<div class="prize-tile" onclick="showPage('disc')" style="cursor:pointer;border-top:3px solid #ef4444">
-      <div class="prize-tile-label">🟥 Discipline · £15</div>
-      <div class="prize-tile-av" style="background:${dlP.av.bg};color:${dlP.av.c}">${dln.slice(0,2).toUpperCase()}</div>
-      <div class="prize-tile-name">${dln}</div>
-      <div class="prize-tile-sub">${dld.s} card pts (live)</div>
-    </div>`;
+    h+=prizeTile('🟥 Discipline','£15','Most card points',dln,dlP,`${dld.s} pts · ${dld.y}Y ${dld.r}R`,'#ef4444',`showPage('disc')`);
   }
 
   h+=`</div>`;
